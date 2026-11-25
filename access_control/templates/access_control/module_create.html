@@ -1,0 +1,312 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+    {% if is_edit %}Edit Module{% else %}Create Module{% endif %}
+{% endblock %}
+
+{% block page_heading %}
+    {% if is_edit %}Edit Module{% else %}Create Module{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div class="form-container">
+
+    <!-- Form Header -->
+    <div class="form-header">
+        <div>
+            <h2>
+                {% if is_edit %}Edit Module{% else %}New Module{% endif %}
+            </h2>
+
+            <p>
+                {% if is_edit %}
+                    Update the system module details.
+                {% else %}
+                    Create a new system module.
+                {% endif %}
+            </p>
+        </div>
+
+        <a href="{% url 'access_control:module_management' %}"
+           class="btn btn-secondary">
+            Back to Modules
+        </a>
+    </div>
+
+    <!-- Module Form -->
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-grid">
+
+            <!-- Module Name -->
+            <div class="form-group">
+                <label for="name">Module Name *</label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    maxlength="100"
+                    value="{{ form_data.name }}"
+                    placeholder="Example: Inventory Management"
+                    required
+                >
+
+                {% if errors.name %}
+                    <small class="error-message">
+                        {{ errors.name }}
+                    </small>
+                {% endif %}
+            </div>
+
+            <!-- Module Code -->
+            <div class="form-group">
+                <label for="code">Module Code *</label>
+
+                <input
+                    type="text"
+                    id="code"
+                    name="code"
+                    maxlength="100"
+                    value="{{ form_data.code }}"
+                    placeholder="Example: inventory"
+                    required
+                >
+
+                {% if errors.code %}
+                    <small class="error-message">
+                        {{ errors.code }}
+                    </small>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div class="form-group full-width">
+                <label for="description">Description</label>
+
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="4"
+                    placeholder="Describe the purpose of this module..."
+                >{{ form_data.description }}</textarea>
+            </div>
+
+            <!-- Sort Order -->
+            <div class="form-group">
+                <label for="sort_order">Sort Order</label>
+
+                <input
+                    type="number"
+                    id="sort_order"
+                    name="sort_order"
+                    min="0"
+                    value="{{ form_data.sort_order }}"
+                >
+
+                {% if errors.sort_order %}
+                    <small class="error-message">
+                        {{ errors.sort_order }}
+                    </small>
+                {% endif %}
+            </div>
+
+            <!-- Active Status -->
+            <div class="form-group checkbox-group">
+                <label>
+                    {% if is_edit and module.code == "access_control" %}
+
+                        <input
+                            type="checkbox"
+                            checked
+                            disabled
+                        >
+
+                        <input
+                            type="hidden"
+                            name="is_active"
+                            value="on"
+                        >
+
+                    {% else %}
+
+                        <input
+                            type="checkbox"
+                            name="is_active"
+                            {% if form_data.is_active %}checked{% endif %}
+                        >
+
+                    {% endif %}
+
+                    Active Module
+                </label>
+
+                {% if errors.is_active %}
+                    <small class="error-message">
+                        {{ errors.is_active }}
+                    </small>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+
+            <button type="submit" class="btn btn-primary">
+                {% if is_edit %}Save Changes{% else %}Create Module{% endif %}
+            </button>
+
+            <a href="{% url 'access_control:module_management' %}"
+               class="btn btn-secondary">
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+<style>
+.form-container {
+    background: var(--card-bg, #ffffff);
+    padding: 24px;
+    border-radius: 10px;
+    max-width: 900px;
+}
+
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.form-header h2 {
+    margin: 0 0 6px;
+}
+
+.form-header p {
+    margin: 0;
+    color: #777;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.form-group label {
+    font-weight: 600;
+}
+
+.form-group input:not([type="checkbox"]),
+.form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font: inherit;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.checkbox-group {
+    justify-content: center;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #dc2626;
+    font-size: 0.875rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #222;
+}
+
+@media (max-width: 650px) {
+    .form-container {
+        padding: 16px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .full-width {
+        grid-column: auto;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+</style>
+
+{% endblock %}

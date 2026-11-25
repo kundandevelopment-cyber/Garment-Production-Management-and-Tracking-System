@@ -1,0 +1,1209 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+.group-page {
+    padding: 20px;
+}
+
+.group-toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.group-toolbar input {
+    flex: 1;
+    min-width: 180px;
+}
+
+.group-table-wrap {
+    overflow-x: auto;
+}
+
+.group-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.group-table th,
+.group-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.group-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.group-btn {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #fff;
+    color: #222;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.group-btn-primary {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.group-btn-danger {
+    background: #dc2626;
+    color: white;
+    border-color: #dc2626;
+}
+
+.group-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.group-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,.5);
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.group-modal-box {
+    background: white;
+    max-width: 500px;
+    width: 100%;
+    margin: 6vh auto;
+    border-radius: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.group-modal-box h3 {
+    margin-top: 0;
+}
+
+.group-modal-box input[type=text] {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    margin: 10px 0;
+}
+
+.group-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.group-error {
+    color: #dc2626;
+    margin-top: 8px;
+}
+
+.member-list {
+    max-height: 55vh;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+.member-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.member-item input {
+    width: 16px;
+    height: 16px;
+}
+
+.group-toast {
+    display: none;
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 10000;
+    padding: 12px 18px;
+    border-radius: 8px;
+    color: white;
+    background: #15803d;
+    max-width: calc(100% - 40px);
+}
+
+.group-pagination {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 16px;
+}
+
+/* Permissions modal */
+
+.permission-modal-box {
+    max-width: 850px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.permission-module {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 12px 0;
+    padding: 12px;
+}
+
+.permission-module-title {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.permission-menu {
+    margin: 10px 0 10px 20px;
+    padding: 10px;
+    border-left: 2px solid #ddd;
+}
+
+.permission-child {
+    margin-left: 22px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    cursor: pointer;
+}
+
+.permission-item input {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.permission-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.permission-loading {
+    padding: 20px;
+    text-align: center;
+}
+
+.permission-empty {
+    padding: 15px;
+    color: #666;
+}
+
+@media(max-width: 600px) {
+    .group-page {
+        padding: 10px;
+    }
+
+    .group-table th,
+    .group-table td {
+        padding: 8px;
+        font-size: 13px;
+    }
+
+    .group-modal-box {
+        margin: 2vh auto;
+        padding: 14px;
+    }
+
+    .permission-menu {
+        margin-left: 8px;
+    }
+
+    .permission-child {
+        margin-left: 12px;
+    }
+
+    .permission-modal-box {
+        padding: 12px;
+    }
+
+    .group-actions {
+        min-width: 150px;
+    }
+}
+</style>
+
+<div class="group-page">
+
+    <h2>Group Management</h2>
+
+    <!-- Toolbar -->
+    <div class="group-toolbar">
+
+        <form method="GET" style="display:flex;gap:8px;flex:1;flex-wrap:wrap;">
+
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="Search groups..."
+                style="padding:9px;"
+            >
+
+            <button class="group-btn" type="submit">
+                Search
+            </button>
+
+            <a
+                class="group-btn"
+                href="{% url 'accounts:group_list' %}"
+            >
+                Reset
+            </a>
+
+        </form>
+
+        <button
+            class="group-btn group-btn-primary"
+            type="button"
+            onclick="openGroupModal()"
+        >
+            + Add Group
+        </button>
+
+    </div>
+
+    <!-- Groups Table -->
+    <div class="group-table-wrap">
+
+        <table class="group-table">
+
+            <thead>
+                <tr>
+                    <th>Group Name</th>
+                    <th>Members</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for group in groups %}
+
+                <tr>
+
+                    <td>{{ group.name }}</td>
+
+                    <td>{{ group.user_set.count }}</td>
+
+                    <td>
+
+                        <div class="group-actions">
+
+                            <button
+                                type="button"
+                                class="group-btn"
+                                onclick="openGroupModal(
+                                    {{ group.id }},
+                                    '{{ group.name|escapejs }}'
+                                )"
+                            >
+                                Edit
+                            </button>
+
+                            <button
+                                type="button"
+                                class="group-btn"
+                                onclick="openMembersModal(
+                                    {{ group.id }},
+                                    '{{ group.name|escapejs }}'
+                                )"
+                            >
+                                Members
+                            </button>
+
+                            <button
+                                type="button"
+                                class="group-btn group-btn-primary"
+                                onclick="openPermissionsModal(
+                                    {{ group.id }},
+                                    '{{ group.name|escapejs }}'
+                                )"
+                            >
+                                Permissions
+                            </button>
+
+                            <button
+                                type="button"
+                                class="group-btn group-btn-danger"
+                                onclick="deleteGroup(
+                                    {{ group.id }},
+                                    '{{ group.name|escapejs }}'
+                                )"
+                            >
+                                Delete
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="3">No groups found.</td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- Pagination -->
+    <div class="group-pagination">
+
+        {% if page_obj.has_previous %}
+
+            <a
+                class="group-btn"
+                href="?search={{ search|urlencode }}&page={{ page_obj.previous_page_number }}"
+            >
+                Previous
+            </a>
+
+        {% endif %}
+
+        <span>
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+
+            <a
+                class="group-btn"
+                href="?search={{ search|urlencode }}&page={{ page_obj.next_page_number }}"
+            >
+                Next
+            </a>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- ========================================= -->
+<!-- CREATE / EDIT GROUP MODAL                 -->
+<!-- ========================================= -->
+
+<div class="group-modal" id="groupModal">
+
+    <div class="group-modal-box">
+
+        <h3 id="groupModalTitle">Create Group</h3>
+
+        <form id="groupForm">
+
+            {% csrf_token %}
+
+            <input
+                type="text"
+                id="groupName"
+                name="name"
+                placeholder="Group name"
+                required
+                maxlength="150"
+            >
+
+            <div id="groupFormError" class="group-error"></div>
+
+            <div class="group-modal-actions">
+
+                <button
+                    type="button"
+                    class="group-btn"
+                    onclick="closeGroupModal()"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="group-btn group-btn-primary"
+                >
+                    Save
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================= -->
+<!-- GROUP MEMBERS MODAL                      -->
+<!-- ========================================= -->
+
+<div class="group-modal" id="membersModal">
+
+    <div class="group-modal-box">
+
+        <h3 id="membersModalTitle">Group Members</h3>
+
+        <div id="membersLoading">
+            Loading users...
+        </div>
+
+        <div id="memberList" class="member-list"></div>
+
+        <div id="membersError" class="group-error"></div>
+
+        <div class="group-modal-actions">
+
+            <button
+                type="button"
+                class="group-btn"
+                onclick="closeMembersModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="group-btn group-btn-primary"
+                onclick="saveMembers()"
+            >
+                Save Members
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================= -->
+<!-- GROUP PERMISSIONS MODAL                  -->
+<!-- ========================================= -->
+
+<div class="group-modal" id="permissionsModal">
+
+    <div class="group-modal-box permission-modal-box">
+
+        <h3 id="permissionsModalTitle">
+            Group Permissions
+        </h3>
+
+        <p>
+            Select the modules, menus, and actions this group can access.
+        </p>
+
+        <div
+            id="permissionsLoading"
+            class="permission-loading"
+        >
+            Loading permissions...
+        </div>
+
+        <div id="permissionsTree"></div>
+
+        <div
+            id="permissionsError"
+            class="group-error"
+        ></div>
+
+        <div class="permission-actions">
+
+            <button
+                type="button"
+                class="group-btn"
+                onclick="closePermissionsModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="group-btn group-btn-primary"
+                id="savePermissionsButton"
+                onclick="saveGroupPermissions()"
+            >
+                Save Permissions
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Toast -->
+<div class="group-toast" id="groupToast"></div>
+
+
+<script>
+
+/* =========================================
+   GLOBAL VARIABLES
+========================================= */
+
+let currentGroupId = null;
+let currentMemberGroupId = null;
+let currentPermissionGroupId = null;
+
+
+/* =========================================
+   CSRF TOKEN
+========================================= */
+
+function getCsrfToken() {
+
+    const csrfInput = document.querySelector(
+        '[name=csrfmiddlewaretoken]'
+    );
+
+    return csrfInput ? csrfInput.value : '';
+
+}
+
+
+/* =========================================
+   TOAST NOTIFICATION
+========================================= */
+
+function showGroupToast(message) {
+
+    const toast = document.getElementById('groupToast');
+
+    toast.textContent = message;
+    toast.style.display = 'block';
+
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 2500);
+
+}
+
+
+/* =========================================
+   CREATE / EDIT GROUP
+========================================= */
+
+function openGroupModal(id = null, name = '') {
+
+    currentGroupId = id;
+
+    document.getElementById('groupModalTitle').textContent =
+        id ? 'Edit Group' : 'Create Group';
+
+    document.getElementById('groupName').value = name;
+
+    document.getElementById('groupFormError').textContent = '';
+
+    document.getElementById('groupModal').style.display = 'block';
+
+}
+
+
+function closeGroupModal() {
+
+    document.getElementById('groupModal').style.display = 'none';
+
+}
+
+
+document.getElementById('groupForm').addEventListener(
+    'submit',
+    async function(e) {
+
+        e.preventDefault();
+
+        const name = document.getElementById('groupName').value.trim();
+
+        const errorBox = document.getElementById('groupFormError');
+
+        if (!name) {
+
+            errorBox.textContent = 'Group name is required.';
+
+            return;
+
+        }
+
+        const url = currentGroupId
+            ? `/accounts/groups/modal/${currentGroupId}/edit/`
+            : `/accounts/groups/modal/create/`;
+
+        const data = new FormData();
+
+        data.append('name', name);
+
+        try {
+
+            const response = await fetch(url, {
+
+                method: 'POST',
+
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                },
+
+                body: data
+
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+
+                errorBox.textContent =
+                    result.errors?.name?.[0] ||
+                    result.error ||
+                    'Unable to save group.';
+
+                return;
+
+            }
+
+            closeGroupModal();
+
+            showGroupToast(result.message);
+
+            setTimeout(() => window.location.reload(), 600);
+
+        } catch (error) {
+
+            errorBox.textContent =
+                'Request failed. Please try again.';
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   GROUP MEMBERS
+========================================= */
+
+async function openMembersModal(groupId, groupName) {
+
+    currentMemberGroupId = groupId;
+
+    document.getElementById('membersModalTitle').textContent =
+        `Members — ${groupName}`;
+
+    document.getElementById('membersLoading').style.display = 'block';
+
+    document.getElementById('memberList').innerHTML = '';
+
+    document.getElementById('membersError').textContent = '';
+
+    document.getElementById('membersModal').style.display = 'block';
+
+    try {
+
+        const response = await fetch(
+            `/accounts/groups/${groupId}/members/`
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.error || 'Failed to load users.'
+            );
+
+        }
+
+        const list = document.getElementById('memberList');
+
+        list.innerHTML = '';
+
+        result.users.forEach(user => {
+
+            const label = document.createElement('label');
+
+            label.className = 'member-item';
+
+            const checkbox = document.createElement('input');
+
+            checkbox.type = 'checkbox';
+
+            checkbox.value = user.id;
+
+            checkbox.checked = user.selected;
+
+            const text = document.createElement('span');
+
+            text.textContent = user.full_name
+                ? `${user.username} (${user.full_name})`
+                : user.username;
+
+            label.appendChild(checkbox);
+
+            label.appendChild(text);
+
+            list.appendChild(label);
+
+        });
+
+    } catch (error) {
+
+        document.getElementById('membersError').textContent =
+            error.message || 'Failed to load members.';
+
+    } finally {
+
+        document.getElementById('membersLoading').style.display = 'none';
+
+    }
+
+}
+
+
+function closeMembersModal() {
+
+    document.getElementById('membersModal').style.display = 'none';
+
+}
+
+
+async function saveMembers() {
+
+    const selected = [
+        ...document.querySelectorAll('#memberList input:checked')
+    ].map(checkbox => checkbox.value);
+
+    const data = new FormData();
+
+    selected.forEach(id => data.append('user_ids', id));
+
+    try {
+
+        const response = await fetch(
+            `/accounts/groups/${currentMemberGroupId}/members/`,
+            {
+
+                method: 'POST',
+
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                },
+
+                body: data
+
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+
+            document.getElementById('membersError').textContent =
+                result.error || 'Failed to save members.';
+
+            return;
+
+        }
+
+        closeMembersModal();
+
+        showGroupToast(result.message);
+
+        setTimeout(() => window.location.reload(), 600);
+
+    } catch (error) {
+
+        document.getElementById('membersError').textContent =
+            'Request failed. Please try again.';
+
+    }
+
+}
+
+
+/* =========================================
+   GROUP PERMISSIONS
+========================================= */
+
+
+// Open modal and load permissions.
+
+async function openPermissionsModal(groupId, groupName) {
+
+    currentPermissionGroupId = groupId;
+
+    const modal = document.getElementById('permissionsModal');
+
+    const tree = document.getElementById('permissionsTree');
+
+    const loading = document.getElementById('permissionsLoading');
+
+    const error = document.getElementById('permissionsError');
+
+    document.getElementById('permissionsModalTitle').textContent =
+        `Permissions — ${groupName}`;
+
+    tree.innerHTML = '';
+
+    error.textContent = '';
+
+    loading.style.display = 'block';
+
+    modal.style.display = 'block';
+
+    try {
+
+        const response = await fetch(
+            `/accounts/groups/${groupId}/permissions/`
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+
+            throw new Error(
+                result.message || 'Unable to load permissions.'
+            );
+
+        }
+
+        renderPermissionTree(
+            result.modules,
+            result.assigned
+        );
+
+    } catch (err) {
+
+        error.textContent =
+            err.message || 'Failed to load permissions.';
+
+    } finally {
+
+        loading.style.display = 'none';
+
+    }
+
+}
+
+
+// Render module, menu, submenu and action checkboxes.
+
+function renderPermissionTree(modules, assigned) {
+
+    const tree = document.getElementById('permissionsTree');
+
+    tree.innerHTML = '';
+
+    const selected = new Set(
+        assigned.map(item => `${item.type}-${item.id}`)
+    );
+
+
+    function createCheckbox(type, item, level = 0) {
+
+        const label = document.createElement('label');
+
+        label.className = 'permission-item';
+
+        if (level > 0) {
+
+            label.classList.add('permission-child');
+
+        }
+
+        const checkbox = document.createElement('input');
+
+        checkbox.type = 'checkbox';
+
+        checkbox.dataset.permissionType = type;
+
+        checkbox.value = item.id;
+
+        checkbox.checked = selected.has(
+            `${type}-${item.id}`
+        );
+
+        const text = document.createElement('span');
+
+        text.textContent = item.name;
+
+        label.appendChild(checkbox);
+
+        label.appendChild(text);
+
+        return label;
+
+    }
+
+
+    function renderMenu(menu, container, level = 0) {
+
+        const wrapper = document.createElement('div');
+
+        wrapper.className = 'permission-menu';
+
+        wrapper.appendChild(
+            createCheckbox('menu', menu, level)
+        );
+
+        menu.children.forEach(child => {
+
+            renderMenu(child, wrapper, level + 1);
+
+        });
+
+        menu.actions.forEach(action => {
+
+            wrapper.appendChild(
+                createCheckbox('action', action, level + 1)
+            );
+
+        });
+
+        container.appendChild(wrapper);
+
+    }
+
+
+    modules.forEach(module => {
+
+        const moduleBox = document.createElement('div');
+
+        moduleBox.className = 'permission-module';
+
+        moduleBox.appendChild(
+            createCheckbox('module', module)
+        );
+
+        module.menus.forEach(menu => {
+
+            renderMenu(menu, moduleBox);
+
+        });
+
+        tree.appendChild(moduleBox);
+
+    });
+
+
+    if (!modules.length) {
+
+        tree.innerHTML =
+            '<div class="permission-empty">No active modules available.</div>';
+
+    }
+
+}
+
+
+// Close modal.
+
+function closePermissionsModal() {
+
+    document.getElementById('permissionsModal').style.display = 'none';
+
+}
+
+
+// Save selected permissions.
+
+async function saveGroupPermissions() {
+
+    const error = document.getElementById('permissionsError');
+
+    const saveButton = document.getElementById(
+        'savePermissionsButton'
+    );
+
+    error.textContent = '';
+
+    saveButton.disabled = true;
+
+    saveButton.textContent = 'Saving...';
+
+
+    const permissions = [
+
+        ...document.querySelectorAll(
+            '#permissionsTree input[type="checkbox"]:checked'
+        )
+
+    ].map(checkbox => ({
+
+        type: checkbox.dataset.permissionType,
+
+        id: Number(checkbox.value)
+
+    }));
+
+
+    try {
+
+        const response = await fetch(
+
+            `/accounts/groups/${currentPermissionGroupId}/permissions/`,
+
+            {
+
+                method: 'POST',
+
+                headers: {
+
+                    'Content-Type': 'application/json',
+
+                    'X-CSRFToken': getCsrfToken()
+
+                },
+
+                body: JSON.stringify({
+
+                    permissions: permissions
+
+                })
+
+            }
+
+        );
+
+
+        const result = await response.json();
+
+
+        if (!response.ok || !result.success) {
+
+            throw new Error(
+
+                result.message || 'Unable to save permissions.'
+
+            );
+
+        }
+
+
+        closePermissionsModal();
+
+        showGroupToast(result.message);
+
+
+    } catch (err) {
+
+        error.textContent =
+
+            err.message || 'Request failed. Please try again.';
+
+    } finally {
+
+        saveButton.disabled = false;
+
+        saveButton.textContent = 'Save Permissions';
+
+    }
+
+}
+
+
+/* =========================================
+   DELETE GROUP
+========================================= */
+
+async function deleteGroup(groupId, groupName) {
+
+    const confirmed = confirm(
+
+        `Delete group "${groupName}"? Its membership and group permissions will also be removed.`
+
+    );
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+    try {
+
+        const response = await fetch(
+            `/accounts/groups/${groupId}/delete/`,
+            {
+
+                method: 'POST',
+
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                }
+
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+
+            alert(result.error || 'Unable to delete group.');
+
+            return;
+
+        }
+
+        showGroupToast(result.message);
+
+        setTimeout(() => window.location.reload(), 600);
+
+    } catch (error) {
+
+        alert('Request failed. Please try again.');
+
+    }
+
+}
+
+
+/* =========================================
+   CLOSE MODALS ON OUTSIDE CLICK
+========================================= */
+
+window.addEventListener('click', function(event) {
+
+    if (event.target.classList.contains('group-modal')) {
+
+        event.target.style.display = 'none';
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

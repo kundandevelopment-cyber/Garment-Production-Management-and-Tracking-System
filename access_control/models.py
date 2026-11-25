@@ -22,13 +22,11 @@ class Module(models.Model):
         ordering = ["sort_order", "name"]
 
 
-
-
 class Menu(models.Model):
     module = models.ForeignKey(
         Module,
         on_delete=models.PROTECT,
-        related_name="menus"
+        related_name="menus",
     )
 
     parent = models.ForeignKey(
@@ -36,11 +34,22 @@ class Menu(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="children"
+        related_name="children",
     )
 
     name = models.CharField(max_length=100)
     code = models.SlugField(max_length=100)
+
+    # Django URL pattern name for navigation
+    url_name = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text=(
+            "Django URL pattern name, for example: "
+            "access_control:module_management"
+        ),
+    )
 
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
@@ -54,7 +63,7 @@ class Menu(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["module", "code"],
-                name="unique_menu_code_per_module"
+                name="unique_menu_code_per_module",
             )
         ]
 
@@ -112,13 +121,13 @@ class Menu(models.Model):
                 )
 
             current_parent = current_parent.parent
-        
+
 
 class Action(models.Model):
     menu = models.ForeignKey(
         Menu,
         on_delete=models.PROTECT,
-        related_name="actions"
+        related_name="actions",
     )
 
     name = models.CharField(max_length=100)
@@ -136,7 +145,7 @@ class Action(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["menu", "code"],
-                name="unique_action_code_per_menu"
+                name="unique_action_code_per_menu",
             )
         ]
 
@@ -161,28 +170,28 @@ class GroupPermission(models.Model):
     group = models.ForeignKey(
         Group,
         on_delete=models.CASCADE,
-        related_name="custom_permissions"
+        related_name="custom_permissions",
     )
 
     module = models.ForeignKey(
         Module,
         on_delete=models.PROTECT,
         null=True,
-        blank=True
+        blank=True,
     )
 
     menu = models.ForeignKey(
         Menu,
         on_delete=models.PROTECT,
         null=True,
-        blank=True
+        blank=True,
     )
 
     action = models.ForeignKey(
         Action,
         on_delete=models.PROTECT,
         null=True,
-        blank=True
+        blank=True,
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -194,25 +203,25 @@ class GroupPermission(models.Model):
                     models.Q(
                         module__isnull=False,
                         menu__isnull=True,
-                        action__isnull=True
+                        action__isnull=True,
                     )
                     | models.Q(
                         module__isnull=True,
                         menu__isnull=False,
-                        action__isnull=True
+                        action__isnull=True,
                     )
                     | models.Q(
                         module__isnull=True,
                         menu__isnull=True,
-                        action__isnull=False
+                        action__isnull=False,
                     )
                 ),
-                name="group_permission_exactly_one_target"
+                name="group_permission_exactly_one_target",
             ),
             models.UniqueConstraint(
                 fields=["group", "module", "menu", "action"],
                 name="unique_group_permission",
-                nulls_distinct=False
+                nulls_distinct=False,
             ),
         ]
 
@@ -253,32 +262,33 @@ class GroupPermission(models.Model):
                 "Cannot grant permission under an inactive module."
             )
 
+
 class UserPermission(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="custom_permissions"
+        related_name="custom_permissions",
     )
 
     module = models.ForeignKey(
         Module,
         on_delete=models.PROTECT,
         null=True,
-        blank=True
+        blank=True,
     )
 
     menu = models.ForeignKey(
         Menu,
         on_delete=models.PROTECT,
         null=True,
-        blank=True
+        blank=True,
     )
 
     action = models.ForeignKey(
         Action,
         on_delete=models.PROTECT,
         null=True,
-        blank=True
+        blank=True,
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -290,25 +300,25 @@ class UserPermission(models.Model):
                     models.Q(
                         module__isnull=False,
                         menu__isnull=True,
-                        action__isnull=True
+                        action__isnull=True,
                     )
                     | models.Q(
                         module__isnull=True,
                         menu__isnull=False,
-                        action__isnull=True
+                        action__isnull=True,
                     )
                     | models.Q(
                         module__isnull=True,
                         menu__isnull=True,
-                        action__isnull=False
+                        action__isnull=False,
                     )
                 ),
-                name="user_permission_exactly_one_target"
+                name="user_permission_exactly_one_target",
             ),
             models.UniqueConstraint(
                 fields=["user", "module", "menu", "action"],
                 name="unique_user_permission",
-                nulls_distinct=False
+                nulls_distinct=False,
             ),
         ]
 

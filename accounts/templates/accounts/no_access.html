@@ -1,0 +1,25 @@
+
+{% extends "base.html" %}
+
+{% block title %}No Access | Garment Management System{% endblock %}
+
+{% block content %}
+<div style="
+    max-width: 650px;
+    margin: 60px auto;
+    padding: 35px 25px;
+    text-align: center;
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 14px;
+">
+    <div style="font-size: 48px; margin-bottom: 15px;">🔒</div>
+
+    <h2 style="margin-bottom: 12px;">No Module Access</h2>
+
+    <p style="color: var(--text-muted, #64748b); line-height: 1.7;">
+        Your account does not currently have access to any application modules.
+        Please contact your administrator to request access.
+    </p>
+</div>
+{% endblock %}

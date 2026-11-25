@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # Custom applications
     'accounts',
     'access_control',
+    'product_entry.apps.ProductEntryConfig',
 ]
 
 MIDDLEWARE = [
@@ -65,6 +66,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'access_control.context_processors.accessible_navigation',
             ],
         },
     },
@@ -134,3 +137,6 @@ MAILERS = {
 }
 
 AUTH_USER_MODEL = 'accounts.User'
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "/accounts/"
+LOGOUT_REDIRECT_URL = "accounts:login"

@@ -1,0 +1,1637 @@
+
+{% extends "base.html" %}
+
+{% block title %}Group Permissions | Garment ERP{% endblock %}
+
+{% block content %}
+<div class="gpm-page">
+
+    <form id="gpmCsrfForm" hidden>{% csrf_token %}</form>
+
+    <!-- Breadcrumb -->
+    <nav class="gpm-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>›</span>
+        <span>Access Control</span>
+        <span>›</span>
+        <strong>Group Permissions</strong>
+    </nav>
+
+    <!-- Header -->
+    <header class="gpm-header">
+        <div class="gpm-heading">
+            <div class="gpm-heading-icon">🔐</div>
+            <div>
+                <h1>Group Permission Management</h1>
+                <p>Manage access to modules, menus and actions by user group.</p>
+            </div>
+        </div>
+
+        <div class="gpm-status ready" id="gpmStatus">
+            <span class="gpm-status-dot"></span>
+            <span id="gpmStatusText">Ready</span>
+        </div>
+    </header>
+
+    <!-- Group selector -->
+    <section class="gpm-card gpm-selector">
+        <div class="gpm-selector-heading">
+            <div>
+                <label for="permissionGroup">User Group</label>
+                <p>Select a group to view and manage its permissions.</p>
+            </div>
+
+            <div class="gpm-group-badge" id="gpmGroupBadge" hidden>
+                👥 <span id="gpmGroupBadgeText"></span>
+            </div>
+        </div>
+
+        <div class="gpm-select-wrap">
+            <span class="gpm-select-icon">👥</span>
+            <select id="permissionGroup" disabled>
+                <option value="">Loading groups...</option>
+            </select>
+        </div>
+
+        <small id="groupSelectorHelp">Loading available groups...</small>
+    </section>
+
+    <!-- Statistics -->
+    <section class="gpm-stats" id="gpmStats" hidden>
+        <div class="gpm-stat primary">
+            <span class="gpm-stat-label">Selected Permissions</span>
+            <strong id="gpmSelectedCount">0</strong>
+            <small>Direct assignments</small>
+        </div>
+
+        <div class="gpm-stat">
+            <span class="gpm-stat-label">Modules</span>
+            <strong id="gpmModuleCount">0 / 0</strong>
+            <small>Selected modules</small>
+        </div>
+
+        <div class="gpm-stat">
+            <span class="gpm-stat-label">Menus</span>
+            <strong id="gpmMenuCount">0 / 0</strong>
+            <small>Selected menus</small>
+        </div>
+
+        <div class="gpm-stat">
+            <span class="gpm-stat-label">Actions</span>
+            <strong id="gpmActionCount">0 / 0</strong>
+            <small>Selected actions</small>
+        </div>
+    </section>
+
+    <!-- Coverage -->
+    <section class="gpm-card gpm-coverage" id="gpmCoverage" hidden>
+        <div class="gpm-coverage-heading">
+            <div>
+                <strong>Permission Coverage</strong>
+                <p>Selected direct assignments against all available permissions.</p>
+            </div>
+            <strong id="gpmPercent">0%</strong>
+        </div>
+
+        <div class="gpm-progress-track">
+            <div id="gpmProgress"></div>
+        </div>
+    </section>
+
+    <!-- Toolbar -->
+    <section class="gpm-card gpm-toolbar" id="gpmToolbar" hidden>
+        <div class="gpm-search">
+            <span class="gpm-search-icon">⌕</span>
+            <input
+                type="search"
+                id="gpmSearch"
+                placeholder="Search modules, menus or actions..."
+                autocomplete="off"
+                aria-label="Search permissions"
+            >
+            <button type="button" id="gpmClearSearch"
+                    aria-label="Clear search" hidden>×</button>
+        </div>
+
+        <div class="gpm-toolbar-buttons">
+            <button type="button" class="gpm-btn" id="gpmExpandAll">
+                ⊞ Expand All
+            </button>
+            <button type="button" class="gpm-btn" id="gpmCollapseAll">
+                ⊟ Collapse All
+            </button>
+        </div>
+
+        <div class="gpm-filter-bar">
+            <div class="gpm-filters">
+                <button type="button" class="gpm-filter active" data-filter="all">
+                    All <span id="gpmAllCount">0</span>
+                </button>
+                <button type="button" class="gpm-filter" data-filter="selected">
+                    Selected <span id="gpmSelectedFilterCount">0</span>
+                </button>
+                <button type="button" class="gpm-filter" data-filter="unselected">
+                    Unselected <span id="gpmUnselectedCount">0</span>
+                </button>
+            </div>
+
+            <div class="gpm-bulk-actions">
+                <button type="button" id="gpmSelectAll">Select All</button>
+                <span class="gpm-separator"></span>
+                <button type="button" id="gpmClearAll" class="danger">Clear All</button>
+            </div>
+        </div>
+
+        <div id="gpmSearchInfo" class="gpm-search-info" hidden></div>
+    </section>
+
+    <!-- Permission tree -->
+    <div id="permissionTreeContainer">
+        <div class="gpm-empty">
+            <div class="gpm-empty-icon">🔐</div>
+            <h3>Select a user group</h3>
+            <p>Select a group above to load and manage its permissions.</p>
+        </div>
+    </div>
+
+    <!-- Save bar -->
+    <div class="gpm-save-bar" id="gpmSaveBar" hidden>
+        <div class="gpm-save-info">
+            <span class="gpm-save-indicator" id="gpmSaveIndicator"></span>
+            <div>
+                <strong id="gpmSaveTitle">No pending changes</strong>
+                <small id="gpmSaveDescription">Permissions are up to date.</small>
+            </div>
+        </div>
+
+        <div class="gpm-save-actions">
+            <button type="button" class="gpm-btn" id="gpmDiscardChanges" disabled>
+                Discard
+            </button>
+
+            <button type="button" class="gpm-save-button" id="gpmSaveChanges" disabled>
+                <span>✓</span>
+                <span id="gpmSaveButtonText">Save Changes</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="gpmToast" class="gpm-toast" role="status" aria-live="polite"></div>
+</div>
+
+<style>
+.gpm-page {
+    width: 100%;
+    min-width: 0;
+    padding-bottom: 35px;
+    color: var(--text-color, #111827);
+}
+.gpm-page * { box-sizing: border-box; }
+.gpm-page button, .gpm-page input, .gpm-page select { font: inherit; }
+
+.gpm-card {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 14px;
+}
+
+.gpm-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 22px;
+    font-size: 13px;
+    color: #6b7280;
+}
+.gpm-breadcrumb a { text-decoration: none; color: #2563eb; }
+.gpm-breadcrumb a:hover { text-decoration: underline; }
+.gpm-breadcrumb strong { color: var(--text-color, #111827); }
+
+.gpm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+.gpm-heading { display: flex; align-items: center; gap: 14px; }
+.gpm-heading-icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    background: #eff6ff;
+    border-radius: 13px;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+.gpm-header h1 {
+    font-size: clamp(21px, 3vw, 29px);
+    margin: 0 0 5px;
+    letter-spacing: -.5px;
+}
+.gpm-header p {
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
+    font-size: 14px;
+}
+.gpm-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 30px;
+    background: var(--card-bg, #fff);
+    font-size: 12px;
+    font-weight: 600;
+}
+.gpm-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #9ca3af;
+}
+.gpm-status.ready .gpm-status-dot { background: #22c55e; }
+.gpm-status.loading .gpm-status-dot {
+    background: #f59e0b;
+    animation: gpmPulse 1s infinite;
+}
+.gpm-status.error .gpm-status-dot { background: #ef4444; }
+
+.gpm-selector { padding: 20px; margin-bottom: 18px; }
+.gpm-selector-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+.gpm-selector-heading label { font-size: 14px; font-weight: 700; }
+.gpm-selector-heading p {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 5px 0 0;
+}
+.gpm-group-badge {
+    background: #f3f4f6;
+    border-radius: 30px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.gpm-select-wrap { position: relative; max-width: 550px; }
+.gpm-select-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+.gpm-select-wrap select {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: var(--card-bg, #fff);
+    color: var(--text-color, #111827);
+    font-size: 14px;
+}
+.gpm-select-wrap select:disabled { opacity: .65; cursor: wait; }
+.gpm-selector > small {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #6b7280;
+}
+.gpm-select-wrap select:focus,
+.gpm-search input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+}
+
+.gpm-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+.gpm-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 17px;
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 13px;
+    transition: transform .2s;
+}
+.gpm-stat:hover { transform: translateY(-2px); }
+.gpm-stat.primary {
+    background: linear-gradient(135deg, #eff6ff, #fff);
+    border-color: #dbeafe;
+}
+.gpm-stat-label { color: #6b7280; font-size: 12px; font-weight: 600; }
+.gpm-stat strong {
+    font-size: clamp(22px, 2.5vw, 28px);
+    letter-spacing: -.4px;
+    font-variant-numeric: tabular-nums;
+}
+.gpm-stat small { color: #9ca3af; font-size: 11px; }
+
+.gpm-coverage { padding: 18px; margin-bottom: 18px; }
+.gpm-coverage-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.gpm-coverage-heading strong { font-size: 13px; }
+.gpm-coverage-heading p {
+    margin: 4px 0 0;
+    color: #6b7280;
+    font-size: 12px;
+}
+#gpmPercent { font-size: 18px; }
+.gpm-progress-track {
+    height: 9px;
+    background: #e5e7eb;
+    border-radius: 20px;
+    overflow: hidden;
+}
+#gpmProgress {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #6366f1);
+    border-radius: inherit;
+    transition: width .3s ease;
+}
+
+.gpm-toolbar { padding: 16px; margin-bottom: 18px; }
+.gpm-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+}
+.gpm-search-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 20px;
+    color: #9ca3af;
+    pointer-events: none;
+}
+.gpm-search input {
+    width: 100%;
+    min-width: 0;
+    min-height: 45px;
+    padding: 10px 42px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: var(--card-bg, #fff);
+    color: var(--text-color, #111827);
+    font-size: 14px;
+}
+.gpm-search button {
+    position: absolute;
+    right: 8px;
+    border: 0;
+    background: transparent;
+    font-size: 22px;
+    cursor: pointer;
+    color: #6b7280;
+}
+.gpm-toolbar-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.gpm-btn {
+    padding: 8px 12px;
+    min-height: 36px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 9px;
+    background: var(--card-bg, #fff);
+    color: var(--text-color, #374151);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s;
+}
+.gpm-btn:hover:not(:disabled) { background: #f9fafb; border-color: #93c5fd; }
+.gpm-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.gpm-filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.gpm-filters, .gpm-bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+.gpm-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #6b7280;
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.gpm-filter:hover { background: #f3f4f6; }
+.gpm-filter.active {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #dbeafe;
+}
+.gpm-filter span {
+    display: inline-grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    background: #f3f4f6;
+    border-radius: 20px;
+    font-size: 10px;
+}
+.gpm-bulk-actions button {
+    border: none;
+    background: transparent;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+    padding: 8px;
+}
+.gpm-bulk-actions button:hover { text-decoration: underline; }
+.gpm-bulk-actions button.danger { color: #dc2626; }
+.gpm-separator { height: 20px; width: 1px; background: #e5e7eb; }
+.gpm-search-info { margin-top: 12px; color: #6b7280; font-size: 12px; }
+
+.gpm-tree { display: flex; flex-direction: column; gap: 12px; }
+.gpm-module {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: gpmFade .2s ease;
+}
+.gpm-module.is-selected { border-color: #93c5fd; }
+.gpm-module-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 15px;
+}
+.gpm-expand {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 8px;
+    background: var(--card-bg, #fff);
+    color: var(--text-color, #374151);
+    cursor: pointer;
+}
+.gpm-module-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    background: #eff6ff;
+    border-radius: 9px;
+}
+.gpm-module-name { flex: 1; min-width: 0; }
+.gpm-module-name .permission-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+.gpm-module-name label { font-weight: 700; font-size: 14px; }
+.gpm-counter {
+    flex-shrink: 0;
+    padding: 5px 9px;
+    background: #f3f4f6;
+    color: #6b7280;
+    border-radius: 20px;
+    font-size: 11px;
+}
+.gpm-module-content { padding: 0 16px 12px; }
+.gpm-menu { border-top: 1px solid var(--border-color, #e5e7eb); padding: 12px 0; }
+.gpm-menu-header { display: flex; align-items: center; gap: 9px; min-height: 38px; }
+.gpm-menu-header .permission-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
+}
+.gpm-menu-icon {
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    background: #f3f4f6;
+    border-radius: 7px;
+}
+.gpm-menu-header label { font-size: 13px; font-weight: 650; }
+.gpm-menu-count { font-size: 10px; color: #9ca3af; }
+.gpm-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    margin: 8px 0 0 35px;
+}
+.gpm-action {
+    min-width: 0;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 9px;
+    padding: 9px;
+    background: var(--card-bg, #fff);
+    transition: background .15s, border-color .15s;
+}
+.gpm-action:hover { border-color: #cbd5e1; background: #f9fafb; }
+.gpm-action.is-selected { border-color: #bfdbfe; background: #eff6ff; }
+.gpm-action .permission-checkbox-row { display: flex; align-items: flex-start; gap: 9px; }
+.gpm-action label { font-size: 12px; line-height: 1.5; }
+.gpm-code { color: #9ca3af; font-size: 10px; overflow-wrap: anywhere; }
+.gpm-module input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    accent-color: #2563eb;
+    cursor: pointer;
+}
+.gpm-module label { cursor: pointer; overflow-wrap: anywhere; }
+.gpm-no-items { padding: 10px 0 10px 35px; color: #9ca3af; font-size: 12px; }
+
+.gpm-save-bar {
+    position: sticky;
+    bottom: 12px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 13px;
+    box-shadow: 0 8px 30px rgba(15, 23, 42, .10);
+}
+.gpm-save-bar.has-changes { border-color: #fbbf24; }
+.gpm-save-bar.saved { border-color: #86efac; }
+.gpm-save-info { display: flex; align-items: center; gap: 11px; }
+.gpm-save-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #9ca3af;
+    flex-shrink: 0;
+}
+.gpm-save-bar.has-changes .gpm-save-indicator { background: #f59e0b; }
+.gpm-save-bar.saved .gpm-save-indicator { background: #22c55e; }
+.gpm-save-info strong { display: block; font-size: 13px; }
+.gpm-save-info small { display: block; margin-top: 3px; color: #6b7280; font-size: 11px; }
+.gpm-save-actions { display: flex; align-items: center; gap: 9px; }
+.gpm-save-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 10px 17px;
+    border: 1px solid #2563eb;
+    border-radius: 9px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s;
+}
+.gpm-save-button:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); }
+.gpm-save-button:disabled { opacity: .45; cursor: not-allowed; }
+.gpm-save-button.is-saving { opacity: .75; cursor: wait; }
+
+.gpm-empty {
+    padding: 45px 20px;
+    text-align: center;
+    background: var(--card-bg, #fff);
+    border: 1px dashed var(--border-color, #d1d5db);
+    border-radius: 14px;
+}
+.gpm-empty-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 12px;
+    border-radius: 14px;
+    background: #eff6ff;
+    font-size: 23px;
+}
+.gpm-empty h3 { margin: 0 0 7px; font-size: 16px; }
+.gpm-empty p { margin: 0; color: #6b7280; font-size: 13px; line-height: 1.6; }
+.gpm-message { padding: 16px; background: #f9fafb; border-radius: 10px; color: #4b5563; font-size: 13px; }
+.gpm-message.error { background: #fef2f2; color: #b91c1c; }
+.gpm-loading { text-align: center; padding: 40px 20px; color: #6b7280; }
+.gpm-spinner {
+    width: 28px;
+    height: 28px;
+    margin: 0 auto 12px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: gpmSpin .8s linear infinite;
+}
+.gpm-toast {
+    position: fixed;
+    z-index: 9999;
+    right: 22px;
+    bottom: 22px;
+    max-width: min(380px, calc(100vw - 32px));
+    padding: 13px 17px;
+    border-radius: 11px;
+    background: #111827;
+    color: #fff;
+    font-size: 13px;
+    opacity: 0;
+    transform: translateY(12px);
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+}
+.gpm-toast.show { opacity: 1; transform: translateY(0); }
+.gpm-page [hidden] { display: none !important; }
+
+@keyframes gpmFade {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes gpmSpin { to { transform: rotate(360deg); } }
+@keyframes gpmPulse { 50% { opacity: .4; } }
+
+@media (max-width: 900px) {
+    .gpm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+    .gpm-heading { align-items: flex-start; }
+    .gpm-heading-icon { width: 40px; height: 40px; }
+    .gpm-selector { padding: 15px; }
+    .gpm-stat { padding: 13px; }
+    .gpm-stat strong { font-size: 23px; }
+    .gpm-toolbar { padding: 12px; }
+    .gpm-toolbar-buttons { display: flex; }
+    .gpm-toolbar-buttons .gpm-btn { flex: 1; }
+    .gpm-filter-bar { align-items: flex-start; }
+    .gpm-filters { width: 100%; }
+    .gpm-bulk-actions { margin-left: auto; }
+    .gpm-module-header { padding: 11px; gap: 7px; }
+    .gpm-module-icon { width: 29px; height: 29px; }
+    .gpm-module-content { padding: 0 11px 9px; }
+    .gpm-actions { grid-template-columns: 1fr; margin-left: 22px; }
+    .gpm-counter { font-size: 9px; padding: 4px 6px; }
+    .gpm-save-bar { bottom: 8px; padding: 12px; }
+    .gpm-save-info { flex: 1 1 100%; }
+    .gpm-save-actions { width: 100%; }
+    .gpm-save-actions button { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .gpm-page * { animation: none !important; transition: none !important; }
+}
+</style>
+
+<script>
+(function () {
+    "use strict";
+
+    const groupSelect = document.getElementById("permissionGroup");
+    const treeContainer = document.getElementById("permissionTreeContainer");
+    const helpText = document.getElementById("groupSelectorHelp");
+
+    const stats = document.getElementById("gpmStats");
+    const coverage = document.getElementById("gpmCoverage");
+    const toolbar = document.getElementById("gpmToolbar");
+    const saveBar = document.getElementById("gpmSaveBar");
+
+    const searchInput = document.getElementById("gpmSearch");
+    const clearSearchBtn = document.getElementById("gpmClearSearch");
+    const searchInfo = document.getElementById("gpmSearchInfo");
+
+    const status = document.getElementById("gpmStatus");
+    const statusText = document.getElementById("gpmStatusText");
+
+    const groupBadge = document.getElementById("gpmGroupBadge");
+    const groupBadgeText = document.getElementById("gpmGroupBadgeText");
+
+    const saveButton = document.getElementById("gpmSaveChanges");
+    const saveButtonText = document.getElementById("gpmSaveButtonText");
+    const discardButton = document.getElementById("gpmDiscardChanges");
+
+    const saveTitle = document.getElementById("gpmSaveTitle");
+    const saveDescription = document.getElementById("gpmSaveDescription");
+    const toast = document.getElementById("gpmToast");
+
+    const groupsUrl = "{% url 'access_control:group_permission_groups' %}";
+    const treeUrl = "{% url 'access_control:group_permission_available_tree' %}";
+    const listUrlTemplate = "{% url 'access_control:group_permission_list' 0 %}";
+    const updateUrlTemplate = "{% url 'access_control:group_permission_update' 0 %}";
+
+    let activeFilter = "all";
+    let toastTimer = null;
+    let originalPermissions = [];
+    let currentGroupId = null;
+    let isSaving = false;
+    let isDirty = false;
+    let loadSequence = 0;
+
+    function setStatus(message, type = "ready") {
+        statusText.textContent = message;
+        status.className = "gpm-status " + type;
+    }
+
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
+    }
+
+    function showMessage(message, type = "") {
+        treeContainer.replaceChildren();
+
+        const element = document.createElement("div");
+        element.className = "gpm-message" + (type ? " " + type : "");
+        element.textContent = message;
+        treeContainer.appendChild(element);
+    }
+
+    async function fetchJSON(url, options = {}) {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                "Accept": "application/json",
+                ...(options.headers || {})
+            }
+        });
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (error) {
+            throw new Error(`Invalid server response (HTTP ${response.status}).`);
+        }
+
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || `Request failed (HTTP ${response.status}).`);
+        }
+
+        return data;
+    }
+
+    function getCookie(name) {
+        const cookies = document.cookie ? document.cookie.split(";") : [];
+
+        for (const cookie of cookies) {
+            const trimmed = cookie.trim();
+            if (trimmed.startsWith(name + "=")) {
+                return decodeURIComponent(trimmed.substring(name.length + 1));
+            }
+        }
+        return null;
+    }
+
+    function getCSRFToken() {
+        return getCookie("csrftoken") ||
+            document.querySelector("#gpmCsrfForm [name=csrfmiddlewaretoken]")?.value ||
+            "";
+    }
+
+    function makeCheckboxRow(type, id, checked, name, code) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "permission-checkbox-row";
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = Boolean(checked);
+        input.dataset.targetType = type;
+        input.dataset.targetId = String(id);
+        input.id = `gpm-${type}-${id}`;
+
+        const label = document.createElement("label");
+        label.htmlFor = input.id;
+        label.textContent = name;
+
+        wrapper.append(input, label);
+
+        if (code) {
+            const small = document.createElement("small");
+            small.className = "gpm-code";
+            small.textContent = code;
+            wrapper.appendChild(small);
+        }
+
+        return wrapper;
+    }
+
+    function allCheckboxes() {
+        return Array.from(treeContainer.querySelectorAll('input[type="checkbox"]'));
+    }
+
+    function setChildren(container, checked) {
+        container.querySelectorAll('input[type="checkbox"]').forEach(input => {
+            input.checked = checked;
+            input.indeterminate = false;
+        });
+    }
+
+    function syncParent(parent, children) {
+        if (!children.length) {
+            parent.indeterminate = false;
+            return;
+        }
+
+        const checkedCount = children.filter(child => child.checked).length;
+        const hasPartial = children.some(child => child.indeterminate);
+
+        parent.checked = checkedCount === children.length;
+        parent.indeterminate = hasPartial ||
+            (checkedCount > 0 && checkedCount < children.length);
+    }
+
+    function getSelectedPermissions() {
+        return allCheckboxes()
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => ({
+                target_type: checkbox.dataset.targetType,
+                target_id: Number(checkbox.dataset.targetId)
+            }))
+            .sort((a, b) =>
+                a.target_type.localeCompare(b.target_type) ||
+                a.target_id - b.target_id
+            );
+    }
+
+    function updateDirtyState() {
+        isDirty = JSON.stringify(getSelectedPermissions()) !==
+            JSON.stringify(originalPermissions);
+
+        saveBar.classList.toggle("has-changes", isDirty);
+        saveBar.classList.toggle("saved", !isDirty);
+
+        saveTitle.textContent = isDirty ? "Unsaved changes" : "No pending changes";
+        saveDescription.textContent = isDirty
+            ? "Your changes have not been saved yet."
+            : "Permissions are up to date.";
+
+        saveButton.disabled = !isDirty || isSaving;
+        discardButton.disabled = !isDirty || isSaving;
+
+        if (isDirty && !isSaving) {
+            setStatus("Unsaved changes", "loading");
+        } else if (!isSaving) {
+            setStatus("Loaded", "ready");
+        }
+    }
+
+    function snapshotPermissions() {
+        originalPermissions = getSelectedPermissions();
+        updateDirtyState();
+    }
+
+    function restoreSnapshot() {
+        const saved = new Set(
+            originalPermissions.map(permission =>
+                `${permission.target_type}:${permission.target_id}`
+            )
+        );
+
+        allCheckboxes().forEach(checkbox => {
+            checkbox.checked = saved.has(
+                `${checkbox.dataset.targetType}:${checkbox.dataset.targetId}`
+            );
+            checkbox.indeterminate = false;
+        });
+
+        treeContainer.querySelectorAll(".gpm-action").forEach(action => {
+            const checkbox = action.querySelector('input[type="checkbox"]');
+            action.classList.toggle("is-selected", checkbox.checked);
+        });
+
+        treeContainer.querySelectorAll(".gpm-module").forEach(card => {
+            const checkbox = card.querySelector(
+                ".gpm-module-header input[type='checkbox']"
+            );
+            card.classList.toggle("is-selected", checkbox.checked);
+        });
+
+        updateStats();
+        applyFilterAndSearch();
+        updateDirtyState();
+        showToast("Changes discarded.");
+    }
+
+    function updateStats() {
+        const inputs = allCheckboxes();
+
+        const modules = inputs.filter(input => input.dataset.targetType === "module");
+        const menus = inputs.filter(input => input.dataset.targetType === "menu");
+        const actions = inputs.filter(input => input.dataset.targetType === "action");
+
+        const selectedModules = modules.filter(input => input.checked).length;
+        const selectedMenus = menus.filter(input => input.checked).length;
+        const selectedActions = actions.filter(input => input.checked).length;
+        const selectedTotal = selectedModules + selectedMenus + selectedActions;
+        const total = inputs.length;
+
+        document.getElementById("gpmSelectedCount").textContent = selectedTotal;
+        document.getElementById("gpmModuleCount").textContent =
+            `${selectedModules} / ${modules.length}`;
+        document.getElementById("gpmMenuCount").textContent =
+            `${selectedMenus} / ${menus.length}`;
+        document.getElementById("gpmActionCount").textContent =
+            `${selectedActions} / ${actions.length}`;
+
+        document.getElementById("gpmAllCount").textContent = total;
+        document.getElementById("gpmSelectedFilterCount").textContent = selectedTotal;
+        document.getElementById("gpmUnselectedCount").textContent = total - selectedTotal;
+
+        const percent = total ? Math.round((selectedTotal / total) * 100) : 0;
+        document.getElementById("gpmPercent").textContent = percent + "%";
+        document.getElementById("gpmProgress").style.width = percent + "%";
+    }
+
+    function applyFilterAndSearch() {
+        const query = searchInput.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        function matchesFilter(checkbox) {
+            if (activeFilter === "selected") return checkbox.checked;
+            if (activeFilter === "unselected") return !checkbox.checked;
+            return true;
+        }
+
+        treeContainer.querySelectorAll(".gpm-module").forEach(moduleCard => {
+            const moduleCheckbox = moduleCard.querySelector(
+                ".gpm-module-header input[type='checkbox']"
+            );
+            const moduleMatches = !query ||
+                (moduleCard.dataset.search || "").includes(query);
+
+            let moduleVisible = matchesFilter(moduleCheckbox) && moduleMatches;
+
+            moduleCard.querySelectorAll(".gpm-menu").forEach(menu => {
+                const menuCheckbox = menu.querySelector(
+                    ".gpm-menu-header input[type='checkbox']"
+                );
+                const menuMatches = !query ||
+                    moduleMatches ||
+                    (menu.dataset.search || "").includes(query);
+
+                let visibleActions = 0;
+
+                menu.querySelectorAll(".gpm-action").forEach(action => {
+                    const actionCheckbox = action.querySelector(
+                        'input[type="checkbox"]'
+                    );
+                    const actionMatches = !query ||
+                        moduleMatches ||
+                        (menu.dataset.search || "").includes(query) ||
+                        (action.dataset.search || "").includes(query);
+
+                    const actionVisible =
+                        actionMatches && matchesFilter(actionCheckbox);
+
+                    action.hidden = !actionVisible;
+
+                    if (actionVisible) {
+                        visibleActions++;
+                        visibleCount++;
+                    }
+                });
+
+                const menuVisible =
+                    (menuMatches && matchesFilter(menuCheckbox)) ||
+                    visibleActions > 0;
+
+                menu.hidden = !menuVisible;
+
+                if (menuVisible) {
+                    moduleVisible = true;
+                    visibleCount++;
+                }
+            });
+
+            moduleCard.hidden = !moduleVisible;
+
+            if (moduleVisible && matchesFilter(moduleCheckbox) && moduleMatches) {
+                visibleCount++;
+            }
+        });
+
+        const hasActiveSearch = query.length > 0 || activeFilter !== "all";
+        searchInfo.hidden = !hasActiveSearch;
+
+        if (hasActiveSearch) {
+            searchInfo.textContent = `${visibleCount} matching permission items`;
+        }
+
+        clearSearchBtn.hidden = !query;
+    }
+
+    function setFilter(filter) {
+        activeFilter = filter;
+
+        document.querySelectorAll(".gpm-filter").forEach(button => {
+            button.classList.toggle("active", button.dataset.filter === filter);
+        });
+
+        applyFilterAndSearch();
+    }
+
+    function renderTree(modules, assignedPermissions) {
+        treeContainer.replaceChildren();
+
+        const assigned = new Set(
+            assignedPermissions.map(permission =>
+                `${permission.target_type}:${permission.target_id}`
+            )
+        );
+
+        const tree = document.createElement("div");
+        tree.className = "gpm-tree";
+
+        modules.forEach(moduleData => {
+            const card = document.createElement("article");
+            card.className = "gpm-module";
+            card.dataset.search =
+                `${moduleData.name} ${moduleData.code || ""}`.toLowerCase();
+
+            const header = document.createElement("div");
+            header.className = "gpm-module-header";
+
+            const expand = document.createElement("button");
+            expand.type = "button";
+            expand.className = "gpm-expand";
+            expand.textContent = "▾";
+            expand.setAttribute("aria-label", `Collapse ${moduleData.name}`);
+            expand.setAttribute("aria-expanded", "true");
+
+            const icon = document.createElement("span");
+            icon.className = "gpm-module-icon";
+            icon.textContent = "▦";
+
+            const moduleWrapper = makeCheckboxRow(
+                "module",
+                moduleData.id,
+                assigned.has(`module:${moduleData.id}`),
+                moduleData.name,
+                moduleData.code
+            );
+
+            const moduleCheckbox = moduleWrapper.querySelector('input[type="checkbox"]');
+
+            const moduleName = document.createElement("div");
+            moduleName.className = "gpm-module-name";
+            moduleName.appendChild(moduleWrapper);
+
+            const counter = document.createElement("span");
+            counter.className = "gpm-counter";
+            counter.textContent = `${moduleData.menus.length} menus`;
+
+            header.append(expand, icon, moduleName, counter);
+
+            const content = document.createElement("div");
+            content.className = "gpm-module-content";
+
+            expand.addEventListener("click", () => {
+                content.hidden = !content.hidden;
+                expand.textContent = content.hidden ? "▸" : "▾";
+                expand.setAttribute("aria-expanded", String(!content.hidden));
+                expand.setAttribute(
+                    "aria-label",
+                    content.hidden ? `Expand ${moduleData.name}` : `Collapse ${moduleData.name}`
+                );
+            });
+
+            moduleCheckbox.addEventListener("change", () => {
+                setChildren(content, moduleCheckbox.checked);
+                moduleCheckbox.indeterminate = false;
+                card.classList.toggle("is-selected", moduleCheckbox.checked);
+
+                content.querySelectorAll(".gpm-action").forEach(action => {
+                    action.classList.toggle("is-selected", moduleCheckbox.checked);
+                });
+
+                content.querySelectorAll(".gpm-menu").forEach(menu => {
+                    menu.classList.toggle("is-selected", moduleCheckbox.checked);
+                });
+
+                updateStats();
+                updateDirtyState();
+                applyFilterAndSearch();
+            });
+
+            if (!moduleData.menus.length) {
+                const empty = document.createElement("div");
+                empty.className = "gpm-no-items";
+                empty.textContent = "No menus in this module.";
+                content.appendChild(empty);
+            }
+
+            moduleData.menus.forEach(menuData => {
+                const menu = document.createElement("section");
+                menu.className = "gpm-menu";
+                menu.dataset.search =
+                    `${menuData.name} ${menuData.code || ""}`.toLowerCase();
+
+                const menuHeader = document.createElement("div");
+                menuHeader.className = "gpm-menu-header";
+
+                const menuIcon = document.createElement("span");
+                menuIcon.className = "gpm-menu-icon";
+                menuIcon.textContent = "☷";
+
+                const menuWrapper = makeCheckboxRow(
+                    "menu",
+                    menuData.id,
+                    assigned.has(`menu:${menuData.id}`),
+                    menuData.name,
+                    menuData.code
+                );
+
+                const menuCheckbox = menuWrapper.querySelector('input[type="checkbox"]');
+
+                const menuCounter = document.createElement("span");
+                menuCounter.className = "gpm-menu-count";
+                menuCounter.textContent = `${menuData.actions.length} actions`;
+
+                menuHeader.append(menuIcon, menuWrapper, menuCounter);
+
+                const actionsContainer = document.createElement("div");
+                actionsContainer.className = "gpm-actions";
+
+                if (!menuData.actions.length) {
+                    const empty = document.createElement("div");
+                    empty.className = "gpm-no-items";
+                    empty.textContent = "No actions in this menu.";
+                    actionsContainer.appendChild(empty);
+                }
+
+                menuData.actions.forEach(actionData => {
+                    const action = document.createElement("div");
+                    action.className = "gpm-action";
+                    action.dataset.search = (
+                        `${actionData.name} ${actionData.code || ""} ` +
+                        `${menuData.name} ${moduleData.name}`
+                    ).toLowerCase();
+
+                    const wrapper = makeCheckboxRow(
+                        "action",
+                        actionData.id,
+                        assigned.has(`action:${actionData.id}`),
+                        actionData.name,
+                        actionData.code
+                    );
+
+                    const actionCheckbox = wrapper.querySelector('input[type="checkbox"]');
+
+                    action.appendChild(wrapper);
+                    actionsContainer.appendChild(action);
+
+                    actionCheckbox.addEventListener("change", () => {
+                        action.classList.toggle("is-selected", actionCheckbox.checked);
+
+                        const actionCheckboxes = Array.from(
+                            actionsContainer.querySelectorAll('input[type="checkbox"]')
+                        );
+
+                        syncParent(menuCheckbox, actionCheckboxes);
+
+                        const menuCheckboxes = Array.from(
+                            content.querySelectorAll(
+                                ".gpm-menu-header input[type='checkbox']"
+                            )
+                        );
+
+                        syncParent(moduleCheckbox, menuCheckboxes);
+                        card.classList.toggle("is-selected", moduleCheckbox.checked);
+
+                        menu.classList.toggle("is-selected", menuCheckbox.checked);
+
+                        updateStats();
+                        updateDirtyState();
+                        applyFilterAndSearch();
+                    });
+                });
+
+                menuCheckbox.addEventListener("change", () => {
+                    setChildren(actionsContainer, menuCheckbox.checked);
+                    menuCheckbox.indeterminate = false;
+
+                    actionsContainer.querySelectorAll(".gpm-action").forEach(action => {
+                        action.classList.toggle("is-selected", menuCheckbox.checked);
+                    });
+
+                    const menuCheckboxes = Array.from(
+                        content.querySelectorAll(
+                            ".gpm-menu-header input[type='checkbox']"
+                        )
+                    );
+
+                    syncParent(moduleCheckbox, menuCheckboxes);
+                    card.classList.toggle("is-selected", moduleCheckbox.checked);
+                    menu.classList.toggle("is-selected", menuCheckbox.checked);
+
+                    updateStats();
+                    updateDirtyState();
+                    applyFilterAndSearch();
+                });
+
+                menu.append(menuHeader, actionsContainer);
+                content.appendChild(menu);
+            });
+
+            card.append(header, content);
+            tree.appendChild(card);
+        });
+
+        treeContainer.appendChild(tree);
+
+        treeContainer.querySelectorAll(".gpm-action").forEach(action => {
+            const checkbox = action.querySelector('input[type="checkbox"]');
+            action.classList.toggle("is-selected", checkbox.checked);
+        });
+
+        treeContainer.querySelectorAll(".gpm-module").forEach(card => {
+            const checkbox = card.querySelector(
+                ".gpm-module-header input[type='checkbox']"
+            );
+            card.classList.toggle("is-selected", checkbox.checked);
+        });
+
+        stats.hidden = false;
+        coverage.hidden = false;
+        toolbar.hidden = false;
+        saveBar.hidden = false;
+
+        updateStats();
+        applyFilterAndSearch();
+        snapshotPermissions();
+    }
+
+    function setAllExpanded(expanded) {
+        treeContainer.querySelectorAll(".gpm-module").forEach(card => {
+            const content = card.querySelector(".gpm-module-content");
+            const button = card.querySelector(".gpm-expand");
+
+            content.hidden = !expanded;
+            button.textContent = expanded ? "▾" : "▸";
+            button.setAttribute("aria-expanded", String(expanded));
+        });
+    }
+
+    function resetGroupUI() {
+        stats.hidden = true;
+        coverage.hidden = true;
+        toolbar.hidden = true;
+        saveBar.hidden = true;
+        groupBadge.hidden = true;
+
+        originalPermissions = [];
+        isDirty = false;
+
+        searchInput.value = "";
+        activeFilter = "all";
+        currentGroupId = null;
+
+        document.querySelectorAll(".gpm-filter").forEach(button => {
+            button.classList.toggle("active", button.dataset.filter === "all");
+        });
+
+        updateStats();
+    }
+
+    function getGroupEndpoint(template, groupId) {
+        return template.replace(/\/0\/$/, `/${groupId}/`);
+    }
+
+    async function savePermissions() {
+        if (!currentGroupId || isSaving || !isDirty) return;
+
+        const groupIdBeingSaved = currentGroupId;
+        const permissions = getSelectedPermissions();
+        const updateUrl = getGroupEndpoint(updateUrlTemplate, groupIdBeingSaved);
+
+        isSaving = true;
+        groupSelect.disabled = true;
+        saveButton.disabled = true;
+        discardButton.disabled = true;
+        saveButton.classList.add("is-saving");
+        saveButtonText.textContent = "Saving...";
+        setStatus("Saving", "loading");
+
+        try {
+            const result = await fetchJSON(updateUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: JSON.stringify({ permissions })
+            });
+
+            if (currentGroupId !== groupIdBeingSaved) return;
+
+            originalPermissions = permissions;
+            updateDirtyState();
+
+            setStatus("Saved", "ready");
+            helpText.textContent =
+                `Permissions saved successfully for ${groupSelect.options[groupSelect.selectedIndex].text}.`;
+
+            showToast(result.message || "Permissions saved successfully.");
+
+        } catch (error) {
+            setStatus("Save failed", "error");
+            showToast(error.message || "Failed to save permissions.");
+        } finally {
+            isSaving = false;
+            groupSelect.disabled = false;
+            saveButton.classList.remove("is-saving");
+            saveButtonText.textContent = "Save Changes";
+            updateDirtyState();
+        }
+    }
+
+    async function loadGroups() {
+        groupSelect.disabled = true;
+        groupSelect.replaceChildren();
+
+        const loadingOption = document.createElement("option");
+        loadingOption.value = "";
+        loadingOption.textContent = "Loading groups...";
+        groupSelect.appendChild(loadingOption);
+
+        setStatus("Loading groups", "loading");
+        helpText.textContent = "Fetching user groups...";
+
+        try {
+            const result = await fetchJSON(groupsUrl);
+            const groups = result?.data?.groups;
+
+            if (!Array.isArray(groups)) {
+                throw new Error("Unexpected groups API response format.");
+            }
+
+            groupSelect.replaceChildren();
+
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = "— Select a group —";
+            groupSelect.appendChild(placeholder);
+
+            groups.forEach(group => {
+                const option = document.createElement("option");
+                option.value = String(group.id);
+                option.textContent = group.name;
+                groupSelect.appendChild(option);
+            });
+
+            if (!groups.length) {
+                groupSelect.disabled = true;
+                helpText.textContent = "No groups found.";
+                showMessage("No groups are available. Create a group first.");
+                setStatus("No groups", "error");
+                return;
+            }
+
+            groupSelect.disabled = false;
+            helpText.textContent = "Choose a group to load its permissions.";
+            setStatus("Ready", "ready");
+
+        } catch (error) {
+            groupSelect.replaceChildren();
+
+            const errorOption = document.createElement("option");
+            errorOption.value = "";
+            errorOption.textContent = "Failed to load groups";
+            groupSelect.appendChild(errorOption);
+
+            groupSelect.disabled = true;
+            helpText.textContent = "Unable to load groups. Refresh the page to retry.";
+            setStatus("Connection error", "error");
+            showMessage(error.message || "Failed to load groups.", "error");
+        }
+    }
+
+    async function loadGroupPermissions(groupId) {
+        const thisLoad = ++loadSequence;
+
+        resetGroupUI();
+
+        stats.hidden = true;
+        coverage.hidden = true;
+        toolbar.hidden = true;
+        saveBar.hidden = true;
+        groupBadge.hidden = true;
+
+        treeContainer.replaceChildren();
+
+        const loading = document.createElement("div");
+        loading.className = "gpm-loading";
+
+        const spinner = document.createElement("div");
+        spinner.className = "gpm-spinner";
+
+        const label = document.createElement("div");
+        label.textContent = "Loading permissions...";
+
+        loading.append(spinner, label);
+        treeContainer.appendChild(loading);
+
+        helpText.textContent = "Loading permission data...";
+        setStatus("Loading", "loading");
+
+        try {
+            const listUrl = getGroupEndpoint(listUrlTemplate, groupId);
+
+            const [treeResult, assignedResult] = await Promise.all([
+                fetchJSON(treeUrl),
+                fetchJSON(listUrl)
+            ]);
+
+            if (thisLoad !== loadSequence ||
+                groupSelect.value !== String(groupId)) {
+                return;
+            }
+
+            const modules = treeResult?.data?.modules;
+            const permissions = assignedResult?.data?.permissions;
+
+            if (!Array.isArray(modules) || !Array.isArray(permissions)) {
+                throw new Error("Unexpected permission API response format.");
+            }
+
+            renderTree(modules, permissions);
+
+            currentGroupId = String(groupId);
+
+            const groupName = assignedResult?.data?.group?.name ||
+                groupSelect.options[groupSelect.selectedIndex]?.text ||
+                "Selected group";
+
+            groupBadge.hidden = false;
+            groupBadgeText.textContent = groupName;
+
+            helpText.textContent =
+                `Viewing permissions for ${groupName}. Changes apply only after saving.`;
+
+            setStatus("Loaded", "ready");
+            showToast(`Permissions loaded for ${groupName}`);
+
+        } catch (error) {
+            if (thisLoad !== loadSequence ||
+                groupSelect.value !== String(groupId)) {
+                return;
+            }
+
+            currentGroupId = String(groupId);
+            originalPermissions = [];
+            isDirty = false;
+
+            helpText.textContent = "Unable to load permissions for this group.";
+            setStatus("Error", "error");
+            showMessage(error.message || "Failed to load permissions.", "error");
+        }
+    }
+
+    groupSelect.addEventListener("change", function () {
+        const newGroupId = this.value;
+
+        if (isSaving) {
+            this.value = currentGroupId || "";
+            showToast("Please wait until saving finishes.");
+            return;
+        }
+
+        if (isDirty) {
+            const confirmed = window.confirm(
+                "You have unsaved permission changes.\n\n" +
+                "Switching groups will discard these changes.\n\n" +
+                "Do you want to continue?"
+            );
+
+            if (!confirmed) {
+                this.value = currentGroupId || "";
+                return;
+            }
+        }
+
+        if (!newGroupId) {
+            ++loadSequence;
+            resetGroupUI();
+            helpText.textContent = "Choose a group to manage permissions.";
+            showMessage("Select a group above to begin.");
+            setStatus("Ready", "ready");
+            return;
+        }
+
+        loadGroupPermissions(newGroupId);
+    });
+
+    searchInput.addEventListener("input", applyFilterAndSearch);
+
+    clearSearchBtn.addEventListener("click", () => {
+        searchInput.value = "";
+        applyFilterAndSearch();
+        searchInput.focus();
+    });
+
+    document.querySelector(".gpm-filters").addEventListener("click", event => {
+        const button = event.target.closest("[data-filter]");
+        if (button) setFilter(button.dataset.filter);
+    });
+
+    document.getElementById("gpmExpandAll").addEventListener("click", () => {
+        setAllExpanded(true);
+    });
+
+    document.getElementById("gpmCollapseAll").addEventListener("click", () => {
+        setAllExpanded(false);
+    });
+
+    document.getElementById("gpmSelectAll").addEventListener("click", () => {
+        allCheckboxes().forEach(checkbox => {
+            checkbox.checked = true;
+            checkbox.indeterminate = false;
+        });
+
+        treeContainer.querySelectorAll(".gpm-module, .gpm-menu, .gpm-action").forEach(element => {
+            element.classList.add("is-selected");
+        });
+
+        updateStats();
+        updateDirtyState();
+        applyFilterAndSearch();
+
+        showToast("All permissions selected. Save to apply changes.");
+    });
+
+    document.getElementById("gpmClearAll").addEventListener("click", () => {
+        allCheckboxes().forEach(checkbox => {
+            checkbox.checked = false;
+            checkbox.indeterminate = false;
+        });
+
+        treeContainer.querySelectorAll(".gpm-module, .gpm-menu, .gpm-action").forEach(element => {
+            element.classList.remove("is-selected");
+        });
+
+        updateStats();
+        updateDirtyState();
+        applyFilterAndSearch();
+
+        showToast("All permissions cleared. Save to apply changes.");
+    });
+
+    discardButton.addEventListener("click", () => {
+        if (!isDirty || isSaving) return;
+
+        if (window.confirm(
+            "Discard all unsaved changes and restore the original permissions?"
+        )) {
+            restoreSnapshot();
+        }
+    });
+
+    saveButton.addEventListener("click", savePermissions);
+
+    // Initial page boot
+    loadGroups();
+})();
+</script>
+{% endblock %}

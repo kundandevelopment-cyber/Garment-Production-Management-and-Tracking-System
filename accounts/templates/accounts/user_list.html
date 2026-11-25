@@ -1,0 +1,660 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .header h1 { margin-bottom: 8px; }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        input, select, button {
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        input { flex: 1; min-width: 200px; }
+
+        button {
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        button:hover { opacity: .9; }
+        button:disabled { opacity: .6; cursor: wait; }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .primary { background: #2563eb; color: white; }
+        .secondary { background: #e5e7eb; color: #111827; }
+        .danger { background: #dc2626; color: white; }
+        .success-btn { background: #16a34a; color: white; }
+
+        .table-container {
+            overflow-x: auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 850px;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #f9fafb;
+            font-size: 13px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status.active { background: #dcfce7; color: #166534; }
+        .status.inactive { background: #fee2e2; color: #991b1b; }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .actions form { margin: 0; }
+
+        .edit-button {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .toggle-button { font-size: 13px; padding: 8px 12px; }
+        .deactivate-button { background: #dc2626; }
+        .activate-button { background: #16a34a; }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #6b7280;
+        }
+
+        .pagination {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .pagination-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pagination-links a {
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: white;
+            color: #2563eb;
+            border: 1px solid #d1d5db;
+        }
+
+        .pagination-links a.disabled {
+            pointer-events: none;
+            opacity: .45;
+            color: #6b7280;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            padding: 20px;
+            background: rgba(0, 0, 0, .5);
+            overflow-y: auto;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.open { display: flex; }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            border-radius: 14px;
+            padding: 24px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            box-shadow: 0 10px 35px rgba(0,0,0,.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 { margin: 0; }
+
+        .close-button {
+            background: transparent;
+            color: #6b7280;
+            font-size: 24px;
+            padding: 4px 10px;
+        }
+
+        .form-field { margin-bottom: 16px; }
+
+        .form-field label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-field input {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .form-field .help-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .field-error {
+            color: #b91c1c;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .modal-errors {
+            color: #b91c1c;
+            background: #fee2e2;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 2000;
+            max-width: calc(100% - 40px);
+            padding: 14px 18px;
+            border-radius: 10px;
+            background: #166534;
+            color: white;
+            display: none;
+        }
+
+        .toast.error { background: #991b1b; }
+        .toast.show { display: block; }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .filters { flex-direction: column; }
+            .filters input, .filters select, .filters button { width: 100%; }
+            .header { align-items: stretch; flex-direction: column; }
+            .header .btn { text-align: center; }
+            .pagination { flex-direction: column; align-items: flex-start; }
+            .modal { padding: 10px; align-items: flex-start; }
+            .modal-content { margin: auto 0; padding: 18px; }
+            .modal-footer .btn { flex: 1; text-align: center; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="header">
+        <div>
+            <h1>User Management</h1>
+            <p>Manage factory system users and their account status.</p>
+        </div>
+
+        <button type="button" id="createUserBtn" class="btn primary">
+            + Create User
+        </button>
+    </div>
+
+    <!-- Search & Filters -->
+    <form method="get" class="filters" id="filterForm">
+        <input
+            type="text"
+            name="search"
+            placeholder="Search username, name or email..."
+            value="{{ search }}"
+        >
+
+        <select name="status">
+            <option value="all" {% if status == "all" %}selected{% endif %}>All Users</option>
+            <option value="active" {% if status == "active" %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if status == "inactive" %}selected{% endif %}>Inactive</option>
+        </select>
+
+        <select name="page_size">
+            <option value="20" {% if pagination.page_size == 20 %}selected{% endif %}>20 per page</option>
+            <option value="50" {% if pagination.page_size == 50 %}selected{% endif %}>50 per page</option>
+            <option value="100" {% if pagination.page_size == 100 %}selected{% endif %}>100 per page</option>
+        </select>
+
+        <button type="submit">Search / Filter</button>
+    </form>
+
+    <!-- User Table -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.get_full_name|default:"—" }}</td>
+                    <td>{{ user.email|default:"—" }}</td>
+                    <td>
+                        {% if user.is_active %}
+                            <span class="status active">Active</span>
+                        {% else %}
+                            <span class="status inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.date_joined|date:"Y-m-d" }}</td>
+                    <td>
+                        <div class="actions">
+                            <button
+                                type="button"
+                                class="btn edit-button edit-user-btn"
+                                data-user-id="{{ user.id }}"
+                                data-username="{{ user.username }}"
+                                data-first-name="{{ user.first_name }}"
+                                data-last-name="{{ user.last_name }}"
+                                data-email="{{ user.email }}"
+                                data-edit-url="{% url 'accounts:user_modal_edit' user.id %}"
+                            >Edit</button>
+
+                            {% if not user.is_superuser and user.id != request.user.id %}
+                            <form
+                                class="toggle-form"
+                                method="post"
+                                action="{% url 'accounts:user_toggle_active' user.id %}"
+                                data-username="{{ user.username }}"
+                            >
+                                {% csrf_token %}
+                                <button
+                                    type="submit"
+                                    class="toggle-button {% if user.is_active %}deactivate-button{% else %}activate-button{% endif %}"
+                                >
+                                    {% if user.is_active %}Deactivate{% else %}Activate{% endif %}
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="empty">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+        <div>
+            Page {{ pagination.page }} of {{ pagination.total_pages }}
+            — {{ pagination.total_items }} users
+        </div>
+
+        <div class="pagination-links">
+            {% if page_obj.has_previous %}
+                <a href="?search={{ search|urlencode }}&status={{ status }}&page_size={{ pagination.page_size }}&page={{ page_obj.previous_page_number }}">Previous</a>
+            {% else %}
+                <a class="disabled">Previous</a>
+            {% endif %}
+
+            {% if page_obj.has_next %}
+                <a href="?search={{ search|urlencode }}&status={{ status }}&page_size={{ pagination.page_size }}&page={{ page_obj.next_page_number }}">Next</a>
+            {% else %}
+                <a class="disabled">Next</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal" id="userModal" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-header">
+            <h2 id="modalTitle">Create User</h2>
+            <button type="button" class="close-button" id="closeModalBtn" aria-label="Close">&times;</button>
+        </div>
+
+        <div id="modalErrors" class="modal-errors"></div>
+
+        <form id="userModalForm" method="post">
+            {% csrf_token %}
+            <div id="modalFields"></div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelModalBtn">Cancel</button>
+                <button type="submit" class="btn primary" id="saveUserBtn">Create User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    const createUrl = "{% url 'accounts:user_modal_create' %}";
+
+    const modal = document.getElementById("userModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalForm = document.getElementById("userModalForm");
+    const modalFields = document.getElementById("modalFields");
+    const modalErrors = document.getElementById("modalErrors");
+    const saveUserBtn = document.getElementById("saveUserBtn");
+    const toast = document.getElementById("toast");
+
+    function showToast(message, isError = false) {
+        toast.textContent = message;
+        toast.className = "toast show" + (isError ? " error" : "");
+        setTimeout(() => {
+            toast.className = "toast";
+        }, 3500);
+    }
+
+    function openModal() {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeModal() {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        modalForm.reset();
+        modalFields.innerHTML = "";
+        clearErrors();
+    }
+
+    function clearErrors() {
+        modalErrors.style.display = "none";
+        modalErrors.textContent = "";
+        modalFields.querySelectorAll(".field-error").forEach(el => el.remove());
+    }
+
+    function addField(name, label, value = "", type = "text", required = false, helpText = "") {
+        const wrapper = document.createElement("div");
+        wrapper.className = "form-field";
+
+        const fieldLabel = document.createElement("label");
+        fieldLabel.htmlFor = "field_" + name;
+        fieldLabel.textContent = label;
+
+        const input = document.createElement("input");
+        input.type = type;
+        input.name = name;
+        input.id = "field_" + name;
+        input.value = value || "";
+        input.required = required;
+        input.autocomplete = type === "password" ? "new-password" : "off";
+
+        wrapper.appendChild(fieldLabel);
+        wrapper.appendChild(input);
+
+        if (helpText) {
+            const help = document.createElement("div");
+            help.className = "help-text";
+            help.textContent = helpText;
+            wrapper.appendChild(help);
+        }
+
+        modalFields.appendChild(wrapper);
+    }
+
+    function setupCreateModal() {
+        modalTitle.textContent = "Create User";
+        saveUserBtn.textContent = "Create User";
+        modalForm.action = createUrl;
+
+        addField("username", "Username", "", "text", true);
+        addField("first_name", "First Name");
+        addField("last_name", "Last Name");
+        addField("email", "Email", "", "email");
+
+        addField("password1", "Password", "", "password", true);
+        addField("password2", "Confirm Password", "", "password", true);
+
+        openModal();
+        document.getElementById("field_username").focus();
+    }
+
+    function setupEditModal(button) {
+        modalTitle.textContent = "Edit User";
+        saveUserBtn.textContent = "Save Changes";
+        modalForm.action = button.dataset.editUrl;
+
+        addField("username", "Username", button.dataset.username, "text", true);
+        addField("first_name", "First Name", button.dataset.firstName);
+        addField("last_name", "Last Name", button.dataset.lastName);
+        addField("email", "Email", button.dataset.email, "email");
+
+        openModal();
+        document.getElementById("field_username").focus();
+    }
+
+    function showFormErrors(errors) {
+        clearErrors();
+
+        let messages = [];
+
+        Object.entries(errors).forEach(([fieldName, errorList]) => {
+            const field = document.getElementById("field_" + fieldName);
+
+            errorList.forEach(error => {
+                messages.push(error.message || error);
+
+                if (field) {
+                    const errorElement = document.createElement("div");
+                    errorElement.className = "field-error";
+                    errorElement.textContent = error.message || error;
+                    field.closest(".form-field").appendChild(errorElement);
+                }
+            });
+        });
+
+        if (messages.length) {
+            modalErrors.textContent = messages.join(" ");
+            modalErrors.style.display = "block";
+        }
+    }
+
+    document.getElementById("createUserBtn").addEventListener("click", setupCreateModal);
+
+    document.querySelectorAll(".edit-user-btn").forEach(button => {
+        button.addEventListener("click", () => setupEditModal(button));
+    });
+
+    document.getElementById("closeModalBtn").addEventListener("click", closeModal);
+    document.getElementById("cancelModalBtn").addEventListener("click", closeModal);
+
+    modal.addEventListener("click", event => {
+        if (event.target === modal) closeModal();
+    });
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && modal.classList.contains("open")) closeModal();
+    });
+
+    // AJAX Create/Edit
+    modalForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        clearErrors();
+
+        saveUserBtn.disabled = true;
+        saveUserBtn.textContent = "Saving...";
+
+        try {
+            const response = await fetch(modalForm.action, {
+                method: "POST",
+                body: new FormData(modalForm),
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                if (data.errors) showFormErrors(data.errors);
+                else showToast(data.message || "Unable to save user.", true);
+                return;
+            }
+
+            closeModal();
+            showToast(data.message);
+            setTimeout(() => window.location.reload(), 700);
+
+        } catch (error) {
+            showToast("Network error. Please try again.", true);
+        } finally {
+            saveUserBtn.disabled = false;
+            saveUserBtn.textContent = modalTitle.textContent === "Create User"
+                ? "Create User"
+                : "Save Changes";
+        }
+    });
+
+    // AJAX Activate/Deactivate
+    document.querySelectorAll(".toggle-form").forEach(form => {
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            const button = form.querySelector("button");
+            const username = form.dataset.username;
+            const isDeactivate = button.textContent.trim() === "Deactivate";
+
+            if (isDeactivate && !confirm(`Deactivate user "${username}"?`)) {
+                return;
+            }
+
+            button.disabled = true;
+
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    body: new FormData(form),
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    showToast(data.message || "Action failed.", true);
+                    button.disabled = false;
+                    return;
+                }
+
+                showToast(data.message);
+                setTimeout(() => window.location.reload(), 500);
+
+            } catch (error) {
+                showToast("Network error. Please try again.", true);
+                button.disabled = false;
+            }
+        });
+    });
+</script>
+</body>
+</html>

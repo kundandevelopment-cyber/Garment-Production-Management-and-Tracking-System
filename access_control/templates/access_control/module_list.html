@@ -1,0 +1,1774 @@
+
+{% extends "base.html" %}
+
+{% block title %}Modules Management | Garment ERP{% endblock %}
+{% block page_heading %}Modules Management{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumbs">
+    <li><a href="{% url 'access_control:home' %}">Home</a></li>
+    <li><span class="breadcrumb-separator">/</span></li>
+    <li><span>Access Control</span></li>
+    <li><span class="breadcrumb-separator">/</span></li>
+    <li><span class="breadcrumb-current" aria-current="page">Modules</span></li>
+</ol>
+{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================
+       Modules Page
+    ========================= */
+
+    .modules-page {
+        width: 100%;
+    }
+
+    .modules-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    .modules-header-info h2 {
+        margin: 0 0 6px;
+        font-size: 22px;
+        color: var(--text);
+    }
+
+    .modules-header-info p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        background: var(--primary);
+        color: #fff;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover {
+        opacity: 0.9;
+    }
+
+    .modules-page button:focus-visible,
+    .modules-page input:focus-visible,
+    .modules-page select:focus-visible,
+    .module-modal button:focus-visible {
+        outline: 3px solid rgba(37, 99, 235, 0.3);
+        outline-offset: 2px;
+    }
+
+    /* =========================
+       List Panel & Toolbar
+    ========================= */
+
+    .modules-panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .modules-toolbar {
+        padding: 18px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .modules-toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .modules-search {
+        flex: 1;
+        min-width: 220px;
+        max-width: 480px;
+    }
+
+    .modules-search input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 14px;
+    }
+
+    .modules-search input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .modules-toolbar select {
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    /* =========================
+       Table
+    ========================= */
+
+    .modules-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .modules-table {
+        width: 100%;
+        min-width: 760px;
+        border-collapse: collapse;
+    }
+
+    .modules-table th {
+        padding: 13px 16px;
+        background: var(--page-bg);
+        color: var(--muted);
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+    }
+
+    .modules-table td {
+        padding: 15px 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+        font-size: 14px;
+        vertical-align: middle;
+    }
+
+    .modules-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .modules-table tbody tr:hover {
+        background: var(--page-bg);
+    }
+
+    .module-name {
+        font-weight: 600;
+    }
+
+    .module-code {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .module-description {
+        max-width: 320px;
+        color: var(--muted);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-inactive {
+        background: #f3f4f6;
+        color: #4b5563;
+    }
+
+    .module-edit-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 7px 12px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .module-edit-btn:hover {
+        background: var(--page-bg);
+    }
+
+    .module-edit-btn:disabled {
+        opacity: 0.55;
+        cursor: wait;
+    }
+
+    .modules-message {
+        padding: 40px 20px !important;
+        text-align: center;
+        color: var(--muted) !important;
+    }
+
+    /* =========================
+       Pagination
+    ========================= */
+
+    .modules-table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 16px 18px;
+        border-top: 1px solid var(--border);
+    }
+
+    .modules-count {
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .modules-pagination {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .modules-pagination button {
+        padding: 7px 11px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        background: var(--surface);
+        color: var(--text);
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .modules-pagination button:hover:not(:disabled) {
+        background: var(--page-bg);
+    }
+
+    .modules-pagination button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    .page-info {
+        padding: 0 8px;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    /* =========================
+       Module Modal
+    ========================= */
+
+    .module-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(3px);
+    }
+
+    .module-modal-overlay.is-open {
+        display: flex;
+    }
+
+    .module-modal {
+        width: 100%;
+        max-width: 560px;
+        max-height: 90vh;
+        overflow-y: auto;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .module-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 22px 24px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .module-modal-title h2 {
+        margin: 0 0 6px;
+        font-size: 20px;
+        color: var(--text);
+    }
+
+    .module-modal-title p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .module-modal-close {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    .module-modal-close:hover {
+        background: var(--page-bg);
+        color: var(--text);
+    }
+
+    .module-modal-body {
+        padding: 24px;
+    }
+
+    .module-form {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .module-form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .module-form-field > label {
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .module-form-field input,
+    .module-form-field textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        font-family: inherit;
+        font-size: 14px;
+    }
+
+    .module-form-field input:focus,
+    .module-form-field textarea:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .module-form-field textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .module-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .module-form-hint {
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    /* Field Validation */
+
+    .field-error {
+        color: #dc2626;
+        font-size: 12px;
+        min-height: 0;
+    }
+
+    .field-error:not(:empty) {
+        margin-top: 4px;
+    }
+
+    .module-form-field input.is-invalid,
+    .module-form-field textarea.is-invalid {
+        border-color: #dc2626;
+    }
+
+    .module-form-field input.is-invalid:focus,
+    .module-form-field textarea.is-invalid:focus {
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+    }
+
+    .form-general-error {
+        display: none;
+        padding: 11px 13px;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        background: #fef2f2;
+        color: #b91c1c;
+        font-size: 13px;
+    }
+
+    .form-general-error:not(:empty) {
+        display: block;
+    }
+
+    /* Status Switch */
+
+    .module-form-status {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 14px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+    }
+
+    .module-form-status-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .module-form-status-info strong {
+        color: var(--text);
+        font-size: 14px;
+    }
+
+    .module-form-status-info span {
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .module-status-toggle {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+
+    .module-status-toggle input {
+        position: absolute;
+        width: 44px;
+        height: 24px;
+        margin: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .module-status-toggle input:disabled {
+        cursor: not-allowed;
+    }
+
+    .module-status-toggle span {
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        background: #9ca3af;
+        pointer-events: none;
+        transition: background 0.2s;
+    }
+
+    .module-status-toggle span::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        transition: transform 0.2s;
+    }
+
+    .module-status-toggle input:checked + span {
+        background: #2563eb;
+    }
+
+    .module-status-toggle input:checked + span::after {
+        transform: translateX(20px);
+    }
+
+    .module-status-toggle input:focus-visible + span {
+        outline: 3px solid rgba(37, 99, 235, 0.3);
+        outline-offset: 3px;
+    }
+
+    .module-status-toggle input:disabled + span {
+        opacity: 0.75;
+    }
+
+    /* Modal Footer */
+
+    .module-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        padding: 18px 24px;
+        border-top: 1px solid var(--border);
+    }
+
+    .module-btn-secondary,
+    .module-btn-primary {
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .module-btn-secondary {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+    }
+
+    .module-btn-secondary:hover {
+        background: var(--page-bg);
+    }
+
+    .module-btn-primary {
+        border: none;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .module-btn-primary:hover {
+        opacity: 0.9;
+    }
+
+    .module-btn-primary:disabled {
+        opacity: 0.6;
+        cursor: wait;
+    }
+
+    /* =========================
+       Toast Notification
+    ========================= */
+
+    .module-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: min(420px, calc(100vw - 40px));
+        padding: 14px 18px;
+        border-radius: 9px;
+        background: #166534;
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+        font-size: 14px;
+        font-weight: 500;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+    }
+
+    .module-toast.is-visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .module-toast.is-error {
+        background: #b91c1c;
+    }
+
+    /* =========================
+       Responsive
+    ========================= */
+
+    @media (max-width: 768px) {
+        .modules-header {
+            align-items: flex-start;
+        }
+
+        .modules-toolbar {
+            padding: 14px;
+        }
+
+        .modules-toolbar-left {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .modules-search {
+            max-width: none;
+            min-width: 0;
+        }
+
+        .modules-toolbar select {
+            width: 100%;
+        }
+
+        .modules-table-footer {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .modules-pagination {
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .module-modal-overlay {
+            padding: 10px;
+        }
+
+        .module-modal {
+            max-height: 95vh;
+            border-radius: 12px;
+        }
+
+        .module-modal-header,
+        .module-modal-body {
+            padding: 18px;
+        }
+
+        .module-modal-footer {
+            padding: 16px 18px;
+        }
+
+        .module-form-row {
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .modules-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .modules-header .btn-primary {
+            width: 100%;
+        }
+
+        .modules-pagination button {
+            padding: 7px 9px;
+        }
+
+        .module-modal-footer {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+
+        .module-modal-footer button {
+            width: 100%;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .modules-page *,
+        .module-modal *,
+        .module-toast {
+            transition: none !important;
+        }
+    }
+    .module-sort-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.module-sort-btn:hover {
+    opacity: 0.8;
+}
+
+.module-sort-btn:focus-visible {
+    outline: 2px solid var(--primary-color, #3b82f6);
+    outline-offset: 3px;
+    border-radius: 3px;
+}
+
+.sort-indicator {
+    display: inline-block;
+    min-width: 12px;
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+</style>
+
+<div class="modules-page">
+
+    <!-- Page Header -->
+    <div class="modules-header">
+        <div class="modules-header-info">
+            <h2>System Modules</h2>
+            <p>Manage modules and control their availability across the ERP.</p>
+        </div>
+
+        <button
+            type="button"
+            class="btn-primary"
+            id="open-create-module-modal"
+        >
+            <span aria-hidden="true">＋</span>
+            Create Module
+        </button>
+    </div>
+
+    <!-- Modules List Panel -->
+    <div class="modules-panel">
+
+        <!-- Toolbar -->
+        <div class="modules-toolbar">
+            <div class="modules-toolbar-left">
+
+                <div class="modules-search">
+                    <input
+                        type="search"
+                        id="module-search"
+                        placeholder="Search modules by name, code, or description..."
+                        aria-label="Search modules"
+                    >
+                </div>
+
+                <select id="module-status" aria-label="Filter modules by status">
+                    <option value="active">Active Modules</option>
+                    <option value="inactive">Inactive Modules</option>
+                    <option value="all">All Modules</option>
+                </select>
+
+                <select id="module-page-size" aria-label="Modules per page">
+                    <option value="10">10 per page</option>
+                    <option value="20">20 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+
+            </div>
+        </div>
+
+        <!-- Modules Table -->
+        <div class="modules-table-wrapper">
+            <table class="modules-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <button type="button" class="module-sort-btn" data-sort="name">
+                                Module <span class="sort-indicator"></span>
+                            </button>
+                        </th>
+
+                        <th>
+                            <button type="button" class="module-sort-btn" data-sort="description">
+                                Description <span class="sort-indicator"></span>
+                            </button>
+                        </th>
+
+                        <th>
+                            <button type="button" class="module-sort-btn" data-sort="sort_order">
+                                Sort Order <span class="sort-indicator"></span>
+                            </button>
+                        </th>
+
+                        <th>
+                            <button type="button" class="module-sort-btn" data-sort="is_active">
+                                Status <span class="sort-indicator"></span>
+                            </button>
+                        </th>
+
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="module-table-body">
+                    <tr>
+                        <td colspan="5" class="modules-message">
+                            Loading modules...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="modules-table-footer">
+            <div id="module-count" class="modules-count">
+                Loading...
+            </div>
+
+            <div class="modules-pagination">
+                <button id="module-prev" type="button" disabled>
+                    Previous
+                </button>
+
+                <span id="module-page-info" class="page-info">
+                    Page 1
+                </span>
+
+                <button id="module-next" type="button" disabled>
+                    Next
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Shared Create/Edit Module Modal -->
+    <div
+        class="module-modal-overlay"
+        id="create-module-modal"
+        aria-hidden="true"
+        inert
+    >
+        <div
+            class="module-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-module-modal-title"
+            aria-describedby="create-module-modal-description"
+        >
+
+            <!-- Modal Header -->
+            <div class="module-modal-header">
+                <div class="module-modal-title">
+                    <h2 id="create-module-modal-title">Create Module</h2>
+                    <p id="create-module-modal-description">
+                        Add a new module to your ERP system.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="module-modal-close"
+                    id="close-create-module-modal"
+                    aria-label="Close dialog"
+                >
+                    &times;
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <div class="module-modal-body">
+                <form
+                    id="create-module-form"
+                    class="module-form"
+                    method="POST"
+                    action="{% url 'access_control:module_create' %}"
+                >
+                    {% csrf_token %}
+
+                    <div
+                        class="form-general-error"
+                        id="module-form-general-error"
+                        role="alert"
+                        aria-live="assertive"
+                    ></div>
+
+                    <div class="module-form-field">
+                        <label for="create-module-name">Module Name *</label>
+                        <input
+                            type="text"
+                            id="create-module-name"
+                            name="name"
+                            maxlength="100"
+                            placeholder="e.g. Production Management"
+                            required
+                            aria-describedby="error-module-name"
+                        >
+                        <div
+                            class="field-error"
+                            id="error-module-name"
+                            aria-live="polite"
+                        ></div>
+                    </div>
+
+                    <div class="module-form-field">
+                        <label for="create-module-code">Module Code *</label>
+                        <input
+                            type="text"
+                            id="create-module-code"
+                            name="code"
+                            maxlength="100"
+                            placeholder="e.g. production"
+                            required
+                            aria-describedby="error-module-code"
+                        >
+                        <span class="module-form-hint">
+                            Letters, numbers, hyphens, and underscores only.
+                        </span>
+                        <div
+                            class="field-error"
+                            id="error-module-code"
+                            aria-live="polite"
+                        ></div>
+                    </div>
+
+                    <div class="module-form-field">
+                        <label for="create-module-description">Description</label>
+                        <textarea
+                            id="create-module-description"
+                            name="description"
+                            placeholder="Describe what this module manages..."
+                            aria-describedby="error-module-description"
+                        ></textarea>
+                        <div
+                            class="field-error"
+                            id="error-module-description"
+                            aria-live="polite"
+                        ></div>
+                    </div>
+
+                    <div class="module-form-row">
+                        <div class="module-form-field">
+                            <label for="create-module-sort-order">Sort Order</label>
+                            <input
+                                type="number"
+                                id="create-module-sort-order"
+                                name="sort_order"
+                                min="0"
+                                value="0"
+                                aria-describedby="error-module-sort-order"
+                            >
+                            <span class="module-form-hint">
+                                Lower numbers appear first.
+                            </span>
+                            <div
+                                class="field-error"
+                                id="error-module-sort-order"
+                                aria-live="polite"
+                            ></div>
+                        </div>
+
+                        <div class="module-form-field">
+                            <label>Module Status</label>
+
+                            <div class="module-form-status">
+                                <div class="module-form-status-info">
+                                    <strong>Active</strong>
+                                    <span id="module-status-description">
+                                        Enable this module
+                                    </span>
+                                </div>
+
+                                <label class="module-status-toggle">
+                                    <input
+                                        type="checkbox"
+                                        name="is_active"
+                                        id="create-module-is-active"
+                                        checked
+                                        aria-label="Module active status"
+                                    >
+                                    <span></span>
+                                </label>
+                            </div>
+
+                            <input
+                                type="hidden"
+                                id="module-active-hidden"
+                                name="is_active"
+                                value="on"
+                                disabled
+                            >
+
+                            <div
+                                class="field-error"
+                                id="error-module-is-active"
+                                aria-live="polite"
+                            ></div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="module-modal-footer">
+                <button
+                    type="button"
+                    class="module-btn-secondary"
+                    id="cancel-create-module"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    form="create-module-form"
+                    class="module-btn-primary"
+                    id="submit-create-module"
+                >
+                    Create Module
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Toast Notification -->
+<div
+    class="module-toast"
+    id="module-toast"
+    role="status"
+    aria-live="polite"
+></div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ==============================
+    // API & Page Elements
+    // ==============================
+
+    const API_URL = "{% url 'access_control:module_list' %}";
+    const CREATE_URL = "{% url 'access_control:module_create' %}";
+    const EDIT_URL_TEMPLATE = "{% url 'access_control:module_edit' 999999999 %}";
+
+    const searchInput = document.getElementById("module-search");
+    const statusSelect = document.getElementById("module-status");
+    const pageSizeSelect = document.getElementById("module-page-size");
+    const tableBody = document.getElementById("module-table-body");
+    const countElement = document.getElementById("module-count");
+    const pageInfoElement = document.getElementById("module-page-info");
+    const previousButton = document.getElementById("module-prev");
+    const nextButton = document.getElementById("module-next");
+
+    // ==============================
+    // Modal Elements
+    // ==============================
+
+    const createModal = document.getElementById("create-module-modal");
+    const openModalButton = document.getElementById("open-create-module-modal");
+    const closeModalButton = document.getElementById("close-create-module-modal");
+    const cancelModalButton = document.getElementById("cancel-create-module");
+
+    const moduleNameInput = document.getElementById("create-module-name");
+    const moduleCodeInput = document.getElementById("create-module-code");
+    const moduleDescriptionInput = document.getElementById("create-module-description");
+    const moduleSortOrderInput = document.getElementById("create-module-sort-order");
+    const moduleActiveInput = document.getElementById("create-module-is-active");
+    const moduleActiveHiddenInput = document.getElementById("module-active-hidden");
+
+    const moduleForm = document.getElementById("create-module-form");
+    const modalTitle = document.getElementById("create-module-modal-title");
+    const modalDescription = document.getElementById("create-module-modal-description");
+    const statusDescription = document.getElementById("module-status-description");
+    const submitModuleButton = document.getElementById("submit-create-module");
+    const generalErrorElement = document.getElementById("module-form-general-error");
+    const toastElement = document.getElementById("module-toast");
+
+    const fieldInputs = {
+        name: moduleNameInput,
+        code: moduleCodeInput,
+        description: moduleDescriptionInput,
+        sort_order: moduleSortOrderInput,
+        is_active: moduleActiveInput,
+    };
+
+    const fieldErrorElements = {
+        name: document.getElementById("error-module-name"),
+        code: document.getElementById("error-module-code"),
+        description: document.getElementById("error-module-description"),
+        sort_order: document.getElementById("error-module-sort-order"),
+        is_active: document.getElementById("error-module-is-active"),
+    };
+
+    const fieldNames = Object.keys(fieldInputs);
+
+    // ==============================
+    // State
+    // ==============================
+
+    let currentPage = 1;
+    let currentSortBy = "";
+    let currentSortDir = "asc";
+    let totalPages = 1;
+    let previousFocusedElement = null;
+    let searchTimer = null;
+    let toastTimer = null;
+    let modalMode = "create";
+    let isSubmitting = false;
+
+    // Cache modules currently displayed in the table by their ID.
+    const modulesById = new Map();
+
+    // ==============================
+    // Utilities
+    // ==============================
+
+    function escapeHTML(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function showMessage(message) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="modules-message">
+                    ${escapeHTML(message)}
+                </td>
+            </tr>
+        `;
+    }
+
+    function showToast(message, isError = false) {
+        clearTimeout(toastTimer);
+
+        toastElement.textContent = message;
+        toastElement.classList.toggle("is-error", isError);
+        toastElement.classList.add("is-visible");
+
+        toastTimer = setTimeout(function () {
+            toastElement.classList.remove("is-visible");
+        }, 3500);
+    }
+
+    function clearFieldErrors() {
+        fieldNames.forEach(function (fieldName) {
+            const input = fieldInputs[fieldName];
+            const errorElement = fieldErrorElements[fieldName];
+
+            input.classList.remove("is-invalid");
+            input.removeAttribute("aria-invalid");
+            errorElement.textContent = "";
+        });
+
+        generalErrorElement.textContent = "";
+    }
+
+    function displayFieldErrors(errors) {
+        clearFieldErrors();
+
+        let firstInvalidInput = null;
+
+        Object.entries(errors).forEach(function ([fieldName, message]) {
+            const input = fieldInputs[fieldName];
+            const errorElement = fieldErrorElements[fieldName];
+
+            if (!input || !errorElement) {
+                generalErrorElement.textContent +=
+                    (generalErrorElement.textContent ? " " : "") + message;
+                return;
+            }
+
+            errorElement.textContent = message;
+            input.classList.add("is-invalid");
+            input.setAttribute("aria-invalid", "true");
+
+            if (!firstInvalidInput) {
+                firstInvalidInput = input;
+            }
+        });
+
+        if (firstInvalidInput) {
+            firstInvalidInput.focus();
+        }
+    }
+
+    function resetSubmitButton() {
+        isSubmitting = false;
+        submitModuleButton.disabled = false;
+
+        submitModuleButton.textContent =
+            modalMode === "edit" ? "Save Changes" : "Create Module";
+    }
+
+    // ==============================
+    // Sorting Indicators
+    // ==============================
+
+    function updateSortIndicators() {
+        document.querySelectorAll(".module-sort-btn").forEach(function (button) {
+            const sortKey = button.dataset.sort;
+            const indicator = button.querySelector(".sort-indicator");
+
+            if (!indicator) {
+                return;
+            }
+
+            if (sortKey === currentSortBy) {
+                indicator.textContent = currentSortDir === "asc" ? "▲" : "▼";
+                button.setAttribute(
+                    "aria-label",
+                    `${button.textContent.trim().replace(/[▲▼]/g, "").trim()}, ${
+                        currentSortDir === "asc" ? "ascending" : "descending"
+                    }`
+                );
+                button.setAttribute("aria-sort", currentSortDir === "asc" ? "ascending" : "descending");
+            } else {
+                indicator.textContent = "";
+                button.removeAttribute("aria-sort");
+            }
+        });
+    }
+
+    // ==============================
+    // Render Modules
+    // ==============================
+
+    function renderModules(modules) {
+        modulesById.clear();
+
+        if (!modules.length) {
+            showMessage("No modules found.");
+            return;
+        }
+
+        modules.forEach(module => {
+            modulesById.set(String(module.id), module);
+        });
+
+        tableBody.innerHTML = modules.map(module => `
+            <tr>
+                <td>
+                    <div class="module-name">${escapeHTML(module.name)}</div>
+                    <div class="module-code">${escapeHTML(module.code)}</div>
+                </td>
+
+                <td>
+                    <div class="module-description">
+                        ${escapeHTML(module.description || "—")}
+                    </div>
+                </td>
+
+                <td>${escapeHTML(module.sort_order)}</td>
+
+                <td>
+                    <span class="status-badge ${module.is_active ? "status-active" : "status-inactive"}">
+                        ${module.is_active ? "Active" : "Inactive"}
+                    </span>
+                </td>
+
+                <td>
+                    <button
+                        type="button"
+                        class="module-edit-btn"
+                        data-module-id="${escapeHTML(module.id)}"
+                        title="Edit ${escapeHTML(module.name)}"
+                        aria-label="Edit ${escapeHTML(module.name)}"
+                    >
+                        <span aria-hidden="true">✎</span> Edit
+                    </button>
+                </td>
+            </tr>
+        `).join("");
+    }
+
+    // ==============================
+    // Load Modules from API
+    // ==============================
+
+    async function loadModules() {
+        showMessage("Loading modules...");
+
+        const params = new URLSearchParams({
+            search: searchInput.value.trim(),
+            status: statusSelect.value,
+            page: currentPage,
+            page_size: pageSizeSelect.value,
+            sort_by: currentSortBy,
+            sort_dir: currentSortDir
+        });
+
+        try {
+            const response = await fetch(`${API_URL}?${params.toString()}`, {
+                method: "GET",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to load modules.");
+            }
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || "Unable to load modules.");
+            }
+
+            const modules = result.data.modules;
+            const pagination = result.data.pagination;
+
+            renderModules(modules);
+
+            totalPages = pagination.total_pages || 1;
+            currentPage = pagination.page || 1;
+
+            const totalItems = pagination.total_items;
+            const pageSize = pagination.page_size;
+
+            const startIndex = totalItems === 0
+                ? 0
+                : ((currentPage - 1) * pageSize) + 1;
+
+            const endIndex = Math.min(currentPage * pageSize, totalItems);
+
+            countElement.textContent =
+                `Showing ${startIndex}–${endIndex} of ${totalItems} modules`;
+
+            pageInfoElement.textContent =
+                `Page ${currentPage} of ${totalPages}`;
+
+            previousButton.disabled = currentPage <= 1;
+            nextButton.disabled = currentPage >= totalPages;
+
+        } catch (error) {
+            showMessage(error.message || "An unexpected error occurred.");
+            countElement.textContent = "Unable to load module count.";
+            pageInfoElement.textContent = "";
+            previousButton.disabled = true;
+            nextButton.disabled = true;
+        }
+    }
+
+    // ==============================
+    // Module Status Configuration
+    // ==============================
+
+    function configureModuleStatus(isCoreModule, isActive) {
+        moduleActiveInput.checked = Boolean(isActive);
+
+        // A disabled checkbox is not submitted by the browser.
+        // The hidden input submits its active value instead.
+        if (isCoreModule) {
+            moduleActiveInput.disabled = true;
+            moduleActiveInput.removeAttribute("name");
+
+            moduleActiveHiddenInput.disabled = false;
+            moduleActiveHiddenInput.value = "on";
+
+            statusDescription.textContent =
+                "The Access Control module must remain active.";
+
+        } else {
+            moduleActiveInput.disabled = false;
+            moduleActiveInput.name = "is_active";
+
+            moduleActiveHiddenInput.disabled = true;
+
+            statusDescription.textContent = "Enable this module";
+        }
+    }
+
+    // ==============================
+    // Configure Modal Mode
+    // ==============================
+
+    function configureModalMode(mode, module = null) {
+        modalMode = mode;
+
+        clearFieldErrors();
+        moduleForm.reset();
+
+        if (mode === "create") {
+            moduleForm.action = CREATE_URL;
+
+            modalTitle.textContent = "Create Module";
+            modalDescription.textContent =
+                "Add a new module to your ERP system.";
+
+            moduleSortOrderInput.value = "0";
+
+            configureModuleStatus(false, true);
+
+            resetSubmitButton();
+
+            return;
+        }
+
+        if (mode === "edit" && module) {
+            moduleForm.action = EDIT_URL_TEMPLATE.replace(
+                "999999999",
+                String(module.id)
+            );
+
+            moduleNameInput.value = module.name || "";
+            moduleCodeInput.value = module.code || "";
+            moduleDescriptionInput.value = module.description || "";
+            moduleSortOrderInput.value = module.sort_order ?? 0;
+
+            const isCoreModule = module.code === "access_control";
+
+            configureModuleStatus(
+                isCoreModule,
+                module.is_active
+            );
+
+            modalTitle.textContent = "Edit Module";
+            modalDescription.textContent =
+                "Update the module details and settings.";
+
+            resetSubmitButton();
+        }
+    }
+
+    // ==============================
+    // Modal Open / Close
+    // ==============================
+
+    function openModuleModal() {
+        if (createModal.classList.contains("is-open")) {
+            return;
+        }
+
+        previousFocusedElement = document.activeElement;
+
+        createModal.classList.add("is-open");
+        createModal.setAttribute("aria-hidden", "false");
+        createModal.inert = false;
+
+        document.body.style.overflow = "hidden";
+
+        moduleNameInput.focus();
+    }
+
+    function closeModuleModal() {
+        if (!createModal.classList.contains("is-open")) {
+            return;
+        }
+
+        createModal.classList.remove("is-open");
+        createModal.setAttribute("aria-hidden", "true");
+        createModal.inert = true;
+
+        document.body.style.overflow = "";
+
+        if (
+            previousFocusedElement &&
+            typeof previousFocusedElement.focus === "function"
+        ) {
+            previousFocusedElement.focus();
+        }
+    }
+
+    // ==============================
+    // Create Module
+    // ==============================
+
+    openModalButton.addEventListener("click", function () {
+        configureModalMode("create");
+        openModuleModal();
+    });
+
+    // ==============================
+    // Edit Module
+    // ==============================
+
+    tableBody.addEventListener("click", function (event) {
+        const editButton = event.target.closest(".module-edit-btn");
+
+        if (!editButton) {
+            return;
+        }
+
+        const moduleId = editButton.dataset.moduleId;
+        const module = modulesById.get(String(moduleId));
+
+        if (!module) {
+            return;
+        }
+
+        configureModalMode("edit", module);
+        openModuleModal();
+    });
+
+    // ==============================
+    // Modal Close Events
+    // ==============================
+
+    closeModalButton.addEventListener("click", closeModuleModal);
+    cancelModalButton.addEventListener("click", closeModuleModal);
+
+    createModal.addEventListener("click", function (event) {
+        if (event.target === createModal) {
+            closeModuleModal();
+        }
+    });
+
+    // ==============================
+    // AJAX Form Submission
+    // ==============================
+
+    moduleForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        if (isSubmitting) {
+            return;
+        }
+
+        clearFieldErrors();
+
+        isSubmitting = true;
+        submitModuleButton.disabled = true;
+
+        submitModuleButton.textContent =
+            modalMode === "edit"
+                ? "Saving Changes..."
+                : "Creating Module...";
+
+        try {
+            const formData = new FormData(moduleForm);
+
+            const response = await fetch(moduleForm.action, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                if (result.errors) {
+                    displayFieldErrors(result.errors);
+                } else {
+                    generalErrorElement.textContent =
+                        result.message || "Unable to save the module.";
+                }
+
+                resetSubmitButton();
+                return;
+            }
+
+            const successMessage = result.message ||
+                (modalMode === "edit"
+                    ? "Module updated successfully."
+                    : "Module created successfully.");
+
+            closeModuleModal();
+
+            // Refresh the existing list without navigating away.
+            await loadModules();
+
+            showToast(successMessage);
+
+            resetSubmitButton();
+
+        } catch (error) {
+            generalErrorElement.textContent =
+                "An unexpected error occurred. Please try again.";
+
+            showToast(
+                "Unable to save the module. Please try again.",
+                true
+            );
+
+            resetSubmitButton();
+        }
+    });
+
+    // ==============================
+    // Clear Individual Field Errors
+    // ==============================
+
+    fieldNames.forEach(function (fieldName) {
+        const input = fieldInputs[fieldName];
+
+        input.addEventListener("input", function () {
+            input.classList.remove("is-invalid");
+            input.removeAttribute("aria-invalid");
+
+            fieldErrorElements[fieldName].textContent = "";
+        });
+
+        input.addEventListener("change", function () {
+            input.classList.remove("is-invalid");
+            input.removeAttribute("aria-invalid");
+
+            fieldErrorElements[fieldName].textContent = "";
+        });
+    });
+
+    // ==============================
+    // Keyboard Accessibility
+    // ==============================
+
+    createModal.addEventListener("keydown", function (event) {
+
+        if (event.key === "Escape") {
+            event.preventDefault();
+
+            if (!isSubmitting) {
+                closeModuleModal();
+            }
+
+            return;
+        }
+
+        if (event.key === "Tab") {
+            const focusableElements = createModal.querySelectorAll(
+                'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+            );
+
+            const focusable = Array.from(focusableElements).filter(
+                element => element.offsetParent !== null
+            );
+
+            if (!focusable.length) {
+                event.preventDefault();
+                return;
+            }
+
+            const firstElement = focusable[0];
+            const lastElement = focusable[focusable.length - 1];
+
+            if (
+                event.shiftKey &&
+                document.activeElement === firstElement
+            ) {
+                event.preventDefault();
+                lastElement.focus();
+
+            } else if (
+                !event.shiftKey &&
+                document.activeElement === lastElement
+            ) {
+                event.preventDefault();
+                firstElement.focus();
+            }
+        }
+    });
+
+    // ==============================
+    // Search (Debounced)
+    // ==============================
+
+    searchInput.addEventListener("input", function () {
+        clearTimeout(searchTimer);
+
+        searchTimer = setTimeout(function () {
+            currentPage = 1;
+            loadModules();
+        }, 350);
+    });
+
+    searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            clearTimeout(searchTimer);
+            currentPage = 1;
+            loadModules();
+        }
+    });
+
+    // ==============================
+    // Filters
+    // ==============================
+
+    statusSelect.addEventListener("change", function () {
+        currentPage = 1;
+        loadModules();
+    });
+
+    pageSizeSelect.addEventListener("change", function () {
+        currentPage = 1;
+        loadModules();
+    });
+
+    // ==============================
+    // Pagination
+    // ==============================
+
+    previousButton.addEventListener("click", function () {
+        if (currentPage > 1) {
+            currentPage--;
+            loadModules();
+        }
+    });
+
+    nextButton.addEventListener("click", function () {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadModules();
+        }
+    });
+
+    // ==============================
+    // Sorting
+    // ==============================
+
+    document.querySelectorAll(".module-sort-btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const sortBy = button.dataset.sort;
+
+            if (currentSortBy === sortBy) {
+                currentSortDir = currentSortDir === "asc" ? "desc" : "asc";
+            } else {
+                currentSortBy = sortBy;
+                currentSortDir = "asc";
+            }
+
+            currentPage = 1;
+
+            updateSortIndicators();
+            loadModules();
+        });
+    });
+
+    // ==============================
+    // Initial Load
+    // ==============================
+
+    updateSortIndicators();
+    loadModules();
+});
+</script>
+
+
+{% endblock %}

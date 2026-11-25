@@ -1,0 +1,438 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Garment Production Management System">
+
+    <title>{% block title %}Garment Management System{% endblock %}</title>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --sidebar-bg: #111827;
+            --sidebar-text: #d1d5db;
+            --page-bg: #f3f4f6;
+            --surface: #ffffff;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--page-bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            color: white;
+            padding: 24px 16px;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .brand {
+            font-size: 18px;
+            font-weight: 700;
+            padding: 0 12px 28px;
+            line-height: 1.5;
+        }
+
+        .brand span {
+            display: block;
+            color: #9ca3af;
+            font-size: 12px;
+            font-weight: 400;
+        }
+
+        .nav-label {
+            color: #9ca3af;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px;
+            margin-top: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            padding: 11px 12px;
+            border: none;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-family: inherit;
+            text-align: left;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: #374151;
+            color: white;
+        }
+
+        .nav-disabled {
+            opacity: 0.65;
+            cursor: default;
+        }
+
+        .nav-chevron {
+            transition: transform 0.2s ease;
+            font-size: 18px;
+        }
+
+        .nav-item.open > .nav-toggle .nav-chevron {
+            transform: rotate(90deg);
+        }
+
+        .nav-children {
+            display: none;
+            padding-left: 14px;
+        }
+
+        .nav-item.open > .nav-children {
+            display: block;
+        }
+
+        .nav-children .nav-link {
+            font-size: 13px;
+            padding: 9px 12px;
+        }
+
+        /* Main area */
+
+        .main-area {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .topbar {
+            min-height: 68px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            gap: 16px;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .topbar h1 {
+            font-size: 18px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .logout-button {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .logout-button:hover {
+            background: #f3f4f6;
+        }
+
+        .menu-button {
+            display: none;
+            border: none;
+            background: transparent;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        .page-content {
+            padding: 28px;
+        }
+
+        /* Breadcrumb */
+
+        .breadcrumb-bar {
+            margin-bottom: 22px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: thin;
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 9px;
+            list-style: none;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .breadcrumbs li {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .breadcrumbs a {
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        .breadcrumbs a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .breadcrumbs .breadcrumb-current {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .breadcrumb-separator {
+            color: #9ca3af;
+            user-select: none;
+        }
+
+        /* Mobile overlay */
+
+        .sidebar-overlay {
+            display: none;
+        }
+
+        /* Tablet and mobile */
+
+        @media (max-width: 768px) {
+            .app-layout {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -280px;
+                bottom: 0;
+                width: 260px;
+                z-index: 1001;
+                transition: left 0.25s ease;
+            }
+
+            .sidebar.mobile-open {
+                left: 0;
+            }
+
+            .sidebar-overlay.visible {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.45);
+                z-index: 1000;
+            }
+
+            .menu-button {
+                display: block;
+            }
+
+            .topbar {
+                padding: 14px 16px;
+            }
+
+            .page-content {
+                padding: 16px;
+            }
+
+            .user-info {
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .topbar h1 {
+                font-size: 16px;
+            }
+
+            .user-info {
+                font-size: 12px;
+            }
+
+            .logout-button {
+                padding: 7px 9px;
+                font-size: 12px;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"
+         onclick="closeSidebar()"></div>
+
+    <div class="app-layout">
+
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                GARMENT ERP
+                <span>Production Management System</span>
+            </div>
+
+            <nav aria-label="Main navigation">
+                {% for item in navigation_modules %}
+                    <div class="nav-label">
+                        {{ item.module.name }}
+                    </div>
+
+                    {% include "includes/sidebar_menu.html" with menus=item.menus %}
+
+                    {% if item.module.code == "access_control" %}
+                        <a href="{% url 'access_control:home' %}"
+                           class="nav-link">
+                            Access Control Dashboard
+                        </a>
+                    {% endif %}
+
+                {% empty %}
+                    <div class="nav-label">Main Navigation</div>
+                    <span class="nav-link nav-disabled">
+                        No accessible modules
+                    </span>
+                {% endfor %}
+            </nav>
+        </aside>
+
+        <div class="main-area">
+
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button
+                        type="button"
+                        class="menu-button"
+                        onclick="toggleSidebar()"
+                        aria-label="Toggle navigation"
+                        aria-controls="sidebar"
+                        aria-expanded="false"
+                        id="sidebarToggle"
+                    >
+                        ☰
+                    </button>
+
+                    <h1>{% block page_heading %}Dashboard{% endblock %}</h1>
+                </div>
+
+                <div class="user-info">
+                    {% if request.user.is_authenticated %}
+                        <span>{{ request.user.username }}</span>
+
+                        <form method="post" action="{% url 'accounts:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="logout-button">
+                                Logout
+                            </button>
+                        </form>
+                    {% else %}
+                        <span>Guest</span>
+                    {% endif %}
+                </div>
+            </header>
+
+            <main class="page-content">
+
+                <nav class="breadcrumb-bar" aria-label="Breadcrumb">
+                    {% block breadcrumbs %}
+                        <ol class="breadcrumbs">
+                            <li>
+                                <span class="breadcrumb-current"
+                                      aria-current="page">
+                                    Home
+                                </span>
+                            </li>
+                        </ol>
+                    {% endblock %}
+                </nav>
+
+                {% block content %}{% endblock %}
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function toggleNavigation(button) {
+            const item = button.closest(".nav-item");
+            const isOpen = item.classList.toggle("open");
+
+            button.setAttribute("aria-expanded", isOpen);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const overlay = document.getElementById("sidebarOverlay");
+            const button = document.getElementById("sidebarToggle");
+
+            sidebar.classList.toggle("mobile-open");
+
+            const isOpen = sidebar.classList.contains("mobile-open");
+
+            overlay.classList.toggle("visible", isOpen);
+            button.setAttribute("aria-expanded", isOpen);
+        }
+
+        function closeSidebar() {
+            document.getElementById("sidebar").classList.remove("mobile-open");
+            document.getElementById("sidebarOverlay").classList.remove("visible");
+            document.getElementById("sidebarToggle").setAttribute(
+                "aria-expanded",
+                "false"
+            );
+        }
+
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Escape") {
+                closeSidebar();
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

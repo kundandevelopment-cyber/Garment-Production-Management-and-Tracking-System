@@ -1,0 +1,47 @@
+
+{% extends "base.html" %}
+
+{% block title %}Product Entry | Garment ERP{% endblock %}
+
+{% block page_heading %}Product Entry{% endblock %}
+
+{% block breadcrumbs %}
+    <ol class="breadcrumbs">
+        <li>
+            <a href="{% url 'access_control:home' %}">
+                Home
+            </a>
+        </li>
+        <li>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-current" aria-current="page">
+                Product Entry
+            </span>
+        </li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+
+<section class="product-entry-page">
+
+    <div class="page-intro">
+        <div>
+            <h2>Product Workspace</h2>
+            <p>
+                Create, manage and organize garment products and their
+                technical information.
+            </p>
+        </div>
+    </div>
+
+    <div class="workspace-placeholder">
+        <h3>Welcome to Product Entry</h3>
+        <p>
+            Your product management workspace will be built here.
+        </p>
+    </div>
+
+</section>
+
+{% endblock %}

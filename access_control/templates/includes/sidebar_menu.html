@@ -1,0 +1,47 @@
+
+{% for item in menus %}
+
+    <div class="nav-item {% if item.is_active or item.has_active_child %}open{% endif %}">
+
+        {% if item.children %}
+
+            <button
+                type="button"
+                class="nav-link nav-toggle {% if item.is_active or item.has_active_child %}active{% endif %}"
+                aria-expanded="{% if item.is_active or item.has_active_child %}true{% else %}false{% endif %}"
+                onclick="toggleNavigation(this)"
+            >
+                <span>{{ item.menu.name }}</span>
+                <span class="nav-chevron">›</span>
+            </button>
+
+            <div class="nav-children">
+                {% include "includes/sidebar_menu.html" with menus=item.children %}
+            </div>
+
+        {% elif item.url %}
+
+            <a
+                href="{{ item.url }}"
+                class="nav-link {% if item.is_active %}active{% endif %}"
+            >
+                {{ item.menu.name }}
+            </a>
+
+        {% else %}
+
+            <span class="nav-link nav-disabled">
+                {{ item.menu.name }}
+            </span>
+
+        {% endif %}
+
+    </div>
+
+{% empty %}
+
+    <span class="nav-link nav-disabled">
+        No accessible menus
+    </span>
+
+{% endfor %}

@@ -1,0 +1,117 @@
+
+{% extends "base.html" %}
+
+{% block title %}Access Control | Garment ERP{% endblock %}
+
+{% block page_heading %}Access Control Dashboard{% endblock %}
+
+{% block content %}
+
+<style>
+    .welcome-section {
+        margin-bottom: 24px;
+    }
+
+    .welcome-section h2 {
+        font-size: 22px;
+        margin-bottom: 6px;
+    }
+
+    .welcome-section p {
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .stat-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 22px;
+        min-width: 0;
+    }
+
+    .stat-card h3 {
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 500;
+        margin-bottom: 14px;
+    }
+
+    .stat-value {
+        font-size: 30px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .stat-description {
+        color: #9ca3af;
+        font-size: 12px;
+        margin-top: 8px;
+    }
+
+    @media (max-width: 900px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 500px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-card {
+            padding: 18px;
+        }
+    }
+</style>
+
+<section class="welcome-section">
+    <h2>Welcome to Access Control</h2>
+    <p>
+        Manage application modules, menus, actions,
+        and user permissions.
+    </p>
+</section>
+
+<section class="stats-grid">
+
+    <div class="stat-card">
+        <h3>Total Modules</h3>
+        <div class="stat-value">{{ dashboard.modules }}</div>
+        <p class="stat-description">Registered application modules</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>Total Menus</h3>
+        <div class="stat-value">{{ dashboard.menus }}</div>
+        <p class="stat-description">Registered navigation menus</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>Total Actions</h3>
+        <div class="stat-value">{{ dashboard.actions }}</div>
+        <p class="stat-description">Registered system actions</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>Group Permissions</h3>
+        <div class="stat-value">{{ dashboard.group_permissions }}</div>
+        <p class="stat-description">Permissions assigned to groups</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>User Permissions</h3>
+        <div class="stat-value">{{ dashboard.user_permissions }}</div>
+        <p class="stat-description">Direct user permission assignments</p>
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,2301 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ module.name }} Menus | Garment ERP{% endblock %}
+{% block page_heading %}Menu Management{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumbs">
+    <li><a href="{% url 'access_control:home' %}">Home</a></li>
+    <li><span class="breadcrumb-separator">/</span></li>
+    <li><a href="{% url 'access_control:module_management' %}">Access Control</a></li>
+    <li><span class="breadcrumb-separator">/</span></li>
+    <li><a href="{% url 'access_control:module_management' %}">Modules</a></li>
+    <li><span class="breadcrumb-separator">/</span></li>
+    <li><span>{{ module.name }}</span></li>
+    <li><span class="breadcrumb-separator">/</span></li>
+    <li><span class="breadcrumb-current" aria-current="page">Menus</span></li>
+</ol>
+{% endblock %}
+
+{% block content %}
+
+<style>
+/* =========================================================
+   MENU MANAGEMENT
+========================================================= */
+
+.menus-page {
+    width: 100%;
+    min-width: 0;
+}
+
+.menus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.menus-header-info h2 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    color: var(--text);
+}
+
+.menus-header-info p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.menus-page button:focus-visible,
+.menus-page input:focus-visible,
+.menus-page select:focus-visible,
+.menu-modal button:focus-visible,
+.menu-modal input:focus-visible,
+.menu-modal textarea:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, .3);
+    outline-offset: 2px;
+}
+
+/* Buttons */
+
+.menu-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.menu-btn-primary:hover {
+    opacity: .9;
+}
+
+/* Panel */
+
+.menus-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.menus-toolbar {
+    padding: 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.menus-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.menus-search {
+    flex: 1;
+    min-width: 220px;
+    max-width: 480px;
+}
+
+.menus-search input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+}
+
+.menus-toolbar select {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.menu-module-select {
+    min-width: 190px;
+}
+
+/* Table */
+
+.menus-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.menus-table {
+    width: 100%;
+    min-width: 1050px;
+    border-collapse: collapse;
+}
+
+.menus-table th {
+    padding: 13px 16px;
+    background: var(--page-bg);
+    color: var(--muted);
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+}
+
+.menus-table td {
+    padding: 15px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.menus-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.menus-table tbody tr:hover {
+    background: var(--page-bg);
+}
+
+.menu-name {
+    font-weight: 600;
+}
+
+.menu-code,
+.menu-url-name {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.menu-url-name {
+    font-family: monospace;
+}
+
+.menu-parent-name {
+    color: var(--muted);
+}
+
+.menu-sort-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.menu-sort-indicator {
+    display: inline-block;
+    min-width: 12px;
+    font-size: 11px;
+    opacity: .7;
+}
+
+.menus-message {
+    padding: 40px 20px !important;
+    text-align: center;
+    color: var(--muted) !important;
+}
+
+/* Status */
+
+.menu-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.menu-status-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.menu-status-inactive {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+/* Table actions */
+
+.menu-edit-btn,
+.menu-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.menu-edit-btn:hover {
+    background: var(--page-bg);
+}
+
+.menu-delete-btn {
+    margin-left: 4px;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.menu-delete-btn:hover {
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+
+.menu-edit-btn:disabled,
+.menu-delete-btn:disabled {
+    opacity: .55;
+    cursor: wait;
+}
+
+/* Footer */
+
+.menus-table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 16px 18px;
+    border-top: 1px solid var(--border);
+}
+
+.menus-count {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.menus-pagination {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.menus-pagination button {
+    padding: 7px 11px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.menus-pagination button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.menu-page-info {
+    padding: 0 8px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* Modal */
+
+.menu-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, .55);
+    backdrop-filter: blur(3px);
+}
+
+.menu-modal-overlay.is-open {
+    display: flex;
+}
+
+.menu-modal,
+.menu-delete-modal {
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+}
+
+.menu-modal {
+    max-width: 650px;
+}
+
+.menu-delete-modal {
+    max-width: 460px;
+}
+
+.menu-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 22px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.menu-modal-title h2 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    color: var(--text);
+}
+
+.menu-modal-title p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.menu-modal-close {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.menu-modal-close:hover {
+    background: var(--page-bg);
+    color: var(--text);
+}
+
+.menu-modal-body {
+    padding: 24px;
+}
+
+.menu-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.menu-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.menu-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.menu-form-field.full-width {
+    grid-column: 1 / -1;
+}
+
+.menu-form-field > label {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.menu-form-field input,
+.menu-form-field select,
+.menu-form-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.menu-form-field textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.menu-form-hint {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* Errors */
+
+.menu-field-error {
+    color: #dc2626;
+    font-size: 12px;
+}
+
+.menu-field-error:not(:empty) {
+    margin-top: 4px;
+}
+
+.menu-form-field input.is-invalid,
+.menu-form-field select.is-invalid,
+.menu-form-field textarea.is-invalid {
+    border-color: #dc2626;
+}
+
+.menu-form-general-error {
+    display: none;
+    padding: 11px 13px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.menu-form-general-error.show {
+    display: block;
+}
+
+/* Status checkbox */
+
+.menu-form-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+}
+
+.menu-form-status-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.menu-form-status-info strong {
+    color: var(--text);
+    font-size: 14px;
+}
+
+.menu-form-status-info span {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.menu-form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.menu-form-checkbox input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+}
+
+.menu-form-checkbox label {
+    margin: 0;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Modal footer */
+
+.menu-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 24px;
+    border-top: 1px solid var(--border);
+}
+
+.menu-btn-secondary,
+.menu-btn-submit {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.menu-btn-secondary {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+}
+
+.menu-btn-submit {
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+}
+
+.menu-btn-submit:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+/* Delete modal */
+
+.menu-delete-modal-body {
+    padding: 20px 24px;
+}
+
+.menu-delete-warning {
+    margin-top: 0;
+    color: #b91c1c;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.menu-delete-name {
+    display: block;
+    margin: 12px 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--page-bg);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.menu-delete-modal-body > p:not(.menu-delete-warning) {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.menu-delete-error {
+    display: none;
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.menu-delete-error:not(:empty) {
+    display: block;
+}
+
+.menu-btn-danger {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.menu-btn-danger:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+/* Toast */
+
+.menu-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: min(420px, calc(100vw - 40px));
+    padding: 14px 18px;
+    border-radius: 9px;
+    background: #166534;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity .2s, transform .2s, visibility .2s;
+}
+
+.menu-toast.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.menu-toast.is-error {
+    background: #b91c1c;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+    .menus-header {
+        align-items: flex-start;
+    }
+
+    .menus-toolbar {
+        padding: 14px;
+    }
+
+    .menus-toolbar-left {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .menus-search {
+        max-width: none;
+        min-width: 0;
+    }
+
+    .menus-toolbar select {
+        width: 100%;
+    }
+
+    .menus-table-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .menus-pagination {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .menu-modal-overlay {
+        padding: 10px;
+    }
+
+    .menu-modal,
+    .menu-delete-modal {
+        max-height: 95vh;
+        border-radius: 12px;
+    }
+
+    .menu-modal-header,
+    .menu-modal-body {
+        padding: 18px;
+    }
+
+    .menu-modal-footer {
+        padding: 16px 18px;
+    }
+
+    .menu-form-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .menu-form-field.full-width {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .menus-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .menus-header .menu-btn-primary {
+        width: 100%;
+    }
+
+    .menus-pagination button {
+        padding: 7px 9px;
+    }
+
+    .menu-modal-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .menu-modal-footer button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .menus-page *,
+    .menu-modal *,
+    .menu-toast {
+        transition: none !important;
+    }
+}
+</style>
+
+<div class="menus-page">
+
+    <!-- PAGE HEADER -->
+    <div class="menus-header">
+        <div class="menus-header-info">
+            <h2>Menu Management</h2>
+            <p>
+                Manage navigation menus, hierarchy, URL routing, and access structure
+                for the {{ module.name }} module.
+            </p>
+        </div>
+
+        <button type="button" class="menu-btn-primary" id="createMenuBtn">
+            <span aria-hidden="true">＋</span>
+            Create Menu
+        </button>
+    </div>
+
+    <!-- MAIN PANEL -->
+    <div class="menus-panel">
+
+        <!-- TOOLBAR -->
+        <div class="menus-toolbar">
+            <div class="menus-toolbar-left">
+
+                <select
+                    id="menuModuleSelector"
+                    class="menu-module-select"
+                    aria-label="Select module"
+                >
+                    {% for item in modules %}
+                    <option
+                        value="{% url 'access_control:menu_management' item.id %}"
+                        {% if item.id == module.id %}selected{% endif %}
+                    >
+                        {{ item.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <div class="menus-search">
+                    <input
+                        type="search"
+                        id="menuSearch"
+                        placeholder="Search menus by name or code..."
+                        aria-label="Search menus"
+                    >
+                </div>
+
+                <select id="menuStatusFilter" aria-label="Filter menus by status">
+                    <option value="active">Active Menus</option>
+                    <option value="inactive">Inactive Menus</option>
+                    <option value="all">All Menus</option>
+                </select>
+
+                <select id="menuPageSize" aria-label="Menus per page">
+                    <option value="10">10 per page</option>
+                    <option value="20">20 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="menus-table-wrapper">
+            <table class="menus-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <button type="button" class="menu-sort-btn" data-sort="name">
+                                Menu Name <span class="menu-sort-indicator"></span>
+                            </button>
+                        </th>
+                        <th>
+                            <button type="button" class="menu-sort-btn" data-sort="code">
+                                Code <span class="menu-sort-indicator"></span>
+                            </button>
+                        </th>
+                        <th>URL Name</th>
+                        <th>Parent Menu</th>
+                        <th>
+                            <button type="button" class="menu-sort-btn" data-sort="sort_order">
+                                Sort Order <span class="menu-sort-indicator"></span>
+                            </button>
+                        </th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="menusTableBody">
+                    <tr>
+                        <td colspan="7" class="menus-message">Loading menus...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PAGINATION -->
+        <div class="menus-table-footer">
+            <div id="menusTableInfo" class="menus-count">Loading...</div>
+
+            <div class="menus-pagination">
+                <button id="menuPrev" type="button" disabled>Previous</button>
+                <span id="menuPageInfo" class="menu-page-info">Page 1</span>
+                <button id="menuNext" type="button" disabled>Next</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- CREATE / EDIT MODAL -->
+<div class="menu-modal-overlay" id="menuModalOverlay" aria-hidden="true" inert>
+    <div
+        class="menu-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="menuModalTitle"
+        aria-describedby="menuModalDescription"
+    >
+        <div class="menu-modal-header">
+            <div class="menu-modal-title">
+                <h2 id="menuModalTitle">Create Menu</h2>
+                <p id="menuModalDescription">Add a new menu to this module.</p>
+            </div>
+
+            <button
+                type="button"
+                class="menu-modal-close"
+                id="closeMenuModalBtn"
+                aria-label="Close dialog"
+            >&times;</button>
+        </div>
+
+        <div class="menu-modal-body">
+            <form id="createMenuForm" class="menu-form" method="POST">
+                {% csrf_token %}
+
+                <div
+                    class="menu-form-general-error"
+                    id="menuFormGeneralError"
+                    role="alert"
+                    aria-live="assertive"
+                ></div>
+
+                <div class="menu-form-grid">
+
+                    <!-- Parent -->
+                    <div class="menu-form-field full-width">
+                        <label for="menuParent">Parent Menu</label>
+                        <select id="menuParent" name="parent">
+                            <option value="">No parent (Top-level menu)</option>
+                        </select>
+                        <span class="menu-field-error" data-error-for="parent"></span>
+                    </div>
+
+                    <!-- Name -->
+                    <div class="menu-form-field">
+                        <label for="menuName">Menu Name *</label>
+                        <input
+                            type="text"
+                            id="menuName"
+                            name="name"
+                            maxlength="100"
+                            placeholder="Enter menu name"
+                            required
+                            aria-describedby="error-menu-name"
+                        >
+                        <span class="menu-field-error" id="error-menu-name" data-error-for="name"></span>
+                    </div>
+
+                    <!-- Code -->
+                    <div class="menu-form-field">
+                        <label for="menuCode">Menu Code *</label>
+                        <input
+                            type="text"
+                            id="menuCode"
+                            name="code"
+                            maxlength="100"
+                            placeholder="e.g. product_list"
+                            required
+                            aria-describedby="error-menu-code"
+                        >
+                        <span class="menu-form-hint">
+                            Letters, numbers, hyphens, and underscores only.
+                        </span>
+                        <span class="menu-field-error" id="error-menu-code" data-error-for="code"></span>
+                    </div>
+
+                    <!-- URL NAME (NEW) -->
+                    <div class="menu-form-field full-width">
+                        <label for="menuUrlName">URL Name</label>
+                        <input
+                            type="text"
+                            id="menuUrlName"
+                            name="url_name"
+                            maxlength="200"
+                            placeholder="e.g. products:product_list"
+                            aria-describedby="error-menu-url-name"
+                        >
+                        <span class="menu-form-hint">
+                            Django URL pattern name used for navigation.
+                            Leave blank if this menu does not directly open a page.
+                        </span>
+                        <span class="menu-field-error" id="error-menu-url-name" data-error-for="url_name"></span>
+                    </div>
+
+                    <!-- Sort Order -->
+                    <div class="menu-form-field">
+                        <label for="menuSortOrder">Sort Order</label>
+                        <input
+                            type="number"
+                            id="menuSortOrder"
+                            name="sort_order"
+                            min="0"
+                            value="0"
+                            aria-describedby="error-menu-sort-order"
+                        >
+                        <span class="menu-form-hint">Lower numbers appear first.</span>
+                        <span class="menu-field-error" id="error-menu-sort-order" data-error-for="sort_order"></span>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="menu-form-field">
+                        <label>Menu Status</label>
+                        <div class="menu-form-status">
+                            <div class="menu-form-status-info">
+                                <strong>Active</strong>
+                                <span>Enable this menu</span>
+                            </div>
+                            <div class="menu-form-checkbox">
+                                <input
+                                    type="checkbox"
+                                    id="menuIsActive"
+                                    name="is_active"
+                                    checked
+                                >
+                                <label for="menuIsActive">Enabled</label>
+                            </div>
+                        </div>
+                        <span class="menu-field-error" id="error-menu-is-active" data-error-for="is_active"></span>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="menu-form-field full-width">
+                        <label for="menuDescription">Description</label>
+                        <textarea
+                            id="menuDescription"
+                            name="description"
+                            rows="3"
+                            placeholder="Describe this menu..."
+                            aria-describedby="error-menu-description"
+                        ></textarea>
+                        <span class="menu-field-error" id="error-menu-description" data-error-for="description"></span>
+                    </div>
+
+                </div>
+
+                <div class="menu-modal-footer">
+                    <button type="button" class="menu-btn-secondary" id="cancelMenuBtn">
+                        Cancel
+                    </button>
+                    <button type="submit" class="menu-btn-submit" id="saveMenuBtn">
+                        Create Menu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="menu-modal-overlay" id="deleteMenuModalOverlay" aria-hidden="true" inert>
+    <div
+        class="menu-delete-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deleteMenuModalTitle"
+    >
+        <div class="menu-modal-header">
+            <div class="menu-modal-title">
+                <h2 id="deleteMenuModalTitle">Delete Menu</h2>
+                <p>Confirm menu deletion.</p>
+            </div>
+
+            <button
+                type="button"
+                class="menu-modal-close"
+                id="closeDeleteMenuModalBtn"
+                aria-label="Close delete confirmation"
+            >&times;</button>
+        </div>
+
+        <div class="menu-delete-modal-body">
+            <p class="menu-delete-warning">
+                Are you sure you want to permanently delete this menu?
+                This operation cannot be undone.
+            </p>
+
+            <span class="menu-delete-name" id="deleteMenuName"></span>
+
+            <p>
+                Menus with child menus, linked actions, or assigned permissions
+                cannot be deleted. Remove or reassign them first.
+            </p>
+
+            <div
+                class="menu-delete-error"
+                id="deleteMenuError"
+                role="alert"
+                aria-live="assertive"
+            ></div>
+        </div>
+
+        <div class="menu-modal-footer">
+            <button type="button" class="menu-btn-secondary" id="cancelDeleteMenuBtn">
+                Cancel
+            </button>
+            <button type="button" class="menu-btn-danger" id="confirmDeleteMenuBtn">
+                Delete Menu
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="menu-toast" id="menuToast" role="status" aria-live="polite"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    "use strict";
+
+    // =====================================================
+    // 1. MODULE SWITCHING
+    // =====================================================
+
+    const moduleSelector = document.getElementById("menuModuleSelector");
+
+    moduleSelector.addEventListener("change", function () {
+        if (moduleSelector.value) {
+            window.location.href = moduleSelector.value;
+        }
+    });
+
+    // =====================================================
+    // 2. API CONFIGURATION
+    // =====================================================
+
+    const MENU_LIST_API_URL =
+        "{% url 'access_control:menu_list' module.id %}";
+
+    const CREATE_MENU_API_URL =
+        "{% url 'access_control:menu_create' module.id %}";
+
+    const EDIT_MENU_URL_TEMPLATE =
+        "{% url 'access_control:menu_edit' module.id 0 %}";
+
+    const DELETE_MENU_URL_TEMPLATE =
+        "{% url 'access_control:menu_delete' module.id 0 %}";
+
+    function getEditMenuUrl(menuId) {
+        return EDIT_MENU_URL_TEMPLATE.replace(
+            /\/0\/edit\/$/,
+            `/${menuId}/edit/`
+        );
+    }
+
+    function getDeleteMenuUrl(menuId) {
+        return DELETE_MENU_URL_TEMPLATE.replace(
+            /\/0\/delete\/$/,
+            `/${menuId}/delete/`
+        );
+    }
+
+    // =====================================================
+    // 3. DOM ELEMENTS
+    // =====================================================
+
+    const tableBody = document.getElementById("menusTableBody");
+    const searchInput = document.getElementById("menuSearch");
+    const statusFilter = document.getElementById("menuStatusFilter");
+    const pageSizeSelect = document.getElementById("menuPageSize");
+
+    const tableInfo = document.getElementById("menusTableInfo");
+    const pageInfo = document.getElementById("menuPageInfo");
+    const previousButton = document.getElementById("menuPrev");
+    const nextButton = document.getElementById("menuNext");
+    const createButton = document.getElementById("createMenuBtn");
+
+    const menuModalOverlay = document.getElementById("menuModalOverlay");
+    const createMenuForm = document.getElementById("createMenuForm");
+    const menuParentSelect = document.getElementById("menuParent");
+
+    const closeMenuModalBtn = document.getElementById("closeMenuModalBtn");
+    const cancelMenuBtn = document.getElementElementById
+        ? document.getElementById("cancelMenuBtn")
+        : document.getElementById("cancelMenuBtn");
+
+    const saveMenuBtn = document.getElementById("saveMenuBtn");
+    const generalErrorBox = document.getElementById("menuFormGeneralError");
+    const menuToast = document.getElementById("menuToast");
+
+    const menuModalTitle = document.getElementById("menuModalTitle");
+    const menuModalDescription = document.getElementById("menuModalDescription");
+
+    const menuNameInput = document.getElementById("menuName");
+    const menuCodeInput = document.getElementById("menuCode");
+    const menuUrlNameInput = document.getElementElementById
+        ? document.getElementById("menuUrlName")
+        : document.getElementById("menuUrlName");
+    const menuSortOrderInput = document.getElementById("menuSortOrder");
+    const menuIsActiveInput = document.getElementById("menuIsActive");
+    const menuDescriptionInput = document.getElementById("menuDescription");
+
+    const deleteMenuModalOverlay = document.getElementById("deleteMenuModalOverlay");
+    const closeDeleteMenuModalBtn = document.getElementById("closeDeleteMenuModalBtn");
+    const cancelDeleteMenuBtn = document.getElementById("cancelDeleteMenuBtn");
+    const confirmDeleteMenuBtn = document.getElementById("confirmDeleteMenuBtn");
+    const deleteMenuName = document.getElementById("deleteMenuName");
+    const deleteMenuError = document.getElementById("deleteMenuError");
+
+    // All form fields, including the new url_name field.
+    const fieldInputs = {
+        parent: menuParentSelect,
+        name: menuNameInput,
+        code: menuCodeInput,
+        url_name: menuUrlNameInput,
+        sort_order: menuSortOrderInput,
+        is_active: menuIsActiveInput,
+        description: menuDescriptionInput
+    };
+
+    const fieldErrorElements = {};
+
+    document.querySelectorAll("[data-error-for]").forEach(element => {
+        fieldErrorElements[element.dataset.errorFor] = element;
+    });
+
+    // =====================================================
+    // 4. STATE
+    // =====================================================
+
+    let menus = [];
+    let allMenus = [];
+
+    let currentPage = 1;
+    let pageSize = Number(pageSizeSelect.value) || 10;
+
+    let searchTerm = "";
+    let sortField = "sort_order";
+    let sortDirection = "asc";
+
+    let totalPages = 1;
+    let totalItems = 0;
+
+    let saving = false;
+    let deleting = false;
+
+    let editingMenuId = null;
+    let deletingMenuId = null;
+
+    let searchTimer = null;
+    let toastTimer = null;
+    let loadRequestId = 0;
+
+    let previousFocusedElement = null;
+    let previousDeleteFocusedElement = null;
+
+    const menusById = new Map();
+
+    // =====================================================
+    // 5. HELPERS
+    // =====================================================
+
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[character]);
+    }
+
+    function showMessage(message) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="menus-message">
+                    ${escapeHTML(message)}
+                </td>
+            </tr>
+        `;
+    }
+
+    function showToast(message, isError = false) {
+        clearTimeout(toastTimer);
+
+        menuToast.textContent = message;
+        menuToast.classList.toggle("is-error", isError);
+        menuToast.classList.add("is-visible");
+
+        toastTimer = setTimeout(function () {
+            menuToast.classList.remove("is-visible");
+        }, 3500);
+    }
+
+    function mergeMenus(...collections) {
+        const menuMap = new Map();
+
+        collections.flat().forEach(menu => {
+            if (!menu || menu.id === undefined || menu.id === null) {
+                return;
+            }
+
+            menuMap.set(Number(menu.id), menu);
+        });
+
+        return Array.from(menuMap.values());
+    }
+
+    function getMenuById(menuId) {
+        if (menuId === null || menuId === undefined || menuId === "") {
+            return null;
+        }
+
+        const id = Number(menuId);
+
+        return menusById.get(id)
+            || allMenus.find(menu => Number(menu.id) === id)
+            || null;
+    }
+
+    function getCSRFToken() {
+        return createMenuForm.querySelector(
+            '[name="csrfmiddlewaretoken"]'
+        )?.value || "";
+    }
+
+    function setModalOpen(overlay, isOpen) {
+        overlay.classList.toggle("is-open", isOpen);
+        overlay.setAttribute("aria-hidden", String(!isOpen));
+        overlay.inert = !isOpen;
+    }
+
+    async function parseJSONResponse(response) {
+        const contentType = response.headers.get("content-type") || "";
+
+        if (!contentType.includes("application/json")) {
+            throw new Error(
+                `Unexpected server response (${response.status}). Please check the server.`
+            );
+        }
+
+        return response.json();
+    }
+
+    // =====================================================
+    // 6. SORT INDICATORS
+    // =====================================================
+
+    function updateSortIndicators() {
+        document.querySelectorAll(".menu-sort-btn").forEach(button => {
+            const field = button.dataset.sort;
+            const indicator = button.querySelector(".menu-sort-indicator");
+
+            if (!indicator) {
+                return;
+            }
+
+            if (field === sortField) {
+                indicator.textContent = sortDirection === "asc" ? "▲" : "▼";
+
+                button.setAttribute(
+                    "aria-label",
+                    `${button.textContent.trim()}, ${sortDirection === "asc" ? "ascending" : "descending"}`
+                );
+            } else {
+                indicator.textContent = "";
+                button.removeAttribute("aria-label");
+            }
+        });
+    }
+
+    // =====================================================
+    // 7. HIERARCHY HELPERS
+    // =====================================================
+
+    function getMenuDepth(menu) {
+        let depth = 0;
+        let current = menu;
+        const visited = new Set();
+
+        while (current && current.parent_id) {
+            const currentId = Number(current.id);
+
+            if (visited.has(currentId)) {
+                break;
+            }
+
+            visited.add(currentId);
+
+            const parent = allMenus.find(
+                item => Number(item.id) === Number(current.parent_id)
+            );
+
+            if (!parent) {
+                break;
+            }
+
+            depth++;
+            current = parent;
+        }
+
+        return depth;
+    }
+
+    function getDescendantIds(menuId) {
+        const descendants = new Set();
+
+        function visit(parentId) {
+            allMenus.forEach(menu => {
+                if (Number(menu.parent_id) !== Number(parentId)) {
+                    return;
+                }
+
+                const childId = Number(menu.id);
+
+                if (descendants.has(childId)) {
+                    return;
+                }
+
+                descendants.add(childId);
+                visit(childId);
+            });
+        }
+
+        visit(menuId);
+        return descendants;
+    }
+
+    function populateParentOptions(excludeMenuId = null) {
+        menuParentSelect.innerHTML = "";
+
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "No parent (Top-level menu)";
+        menuParentSelect.appendChild(defaultOption);
+
+        const excludedIds = new Set();
+
+        if (excludeMenuId !== null && excludeMenuId !== undefined) {
+            excludedIds.add(Number(excludeMenuId));
+
+            getDescendantIds(excludeMenuId).forEach(id => {
+                excludedIds.add(Number(id));
+            });
+        }
+
+        const sortedMenus = [...allMenus].sort((a, b) =>
+            getMenuDepth(a) - getMenuDepth(b)
+            || Number(a.sort_order || 0) - Number(b.sort_order || 0)
+            || String(a.name || "").localeCompare(String(b.name || ""))
+        );
+
+        sortedMenus.forEach(menu => {
+            if (
+                excludedIds.has(Number(menu.id))
+                || menu.is_active === false
+            ) {
+                return;
+            }
+
+            const option = document.createElement("option");
+            option.value = String(menu.id);
+            option.textContent = `${"— ".repeat(getMenuDepth(menu))}${menu.name}`;
+
+            menuParentSelect.appendChild(option);
+        });
+    }
+
+    // =====================================================
+    // 8. RENDER TABLE
+    // =====================================================
+
+    function renderTable() {
+        menusById.clear();
+
+        menus.forEach(menu => {
+            menusById.set(Number(menu.id), menu);
+        });
+
+        if (!menus.length) {
+            showMessage(
+                searchTerm
+                    ? "No matching menus found."
+                    : "No menus found for this status."
+            );
+
+            tableInfo.textContent = `Showing 0 of ${totalItems} menus`;
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+            previousButton.disabled = true;
+            nextButton.disabled = true;
+            return;
+        }
+
+        tableBody.innerHTML = menus.map(menu => {
+            const depth = getMenuDepth(menu);
+            const indent = depth * 20;
+
+            const parentName = menu.parent_name
+                || (menu.parent_id
+                    ? getMenuById(menu.parent_id)?.name || "—"
+                    : "—");
+
+            const isActive = menu.is_active === true;
+
+            return `
+                <tr>
+                    <td>
+                        <div class="menu-name" style="padding-left:${indent}px">
+                            ${depth > 0 ? "↳ " : ""}${escapeHTML(menu.name)}
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="menu-code">${escapeHTML(menu.code)}</div>
+                    </td>
+
+                    <td>
+                        <div class="menu-url-name">
+                            ${escapeHTML(menu.url_name || "—")}
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="menu-parent-name">${escapeHTML(parentName)}</div>
+                    </td>
+
+                    <td>${escapeHTML(menu.sort_order ?? 0)}</td>
+
+                    <td>
+                        <span class="menu-status-badge ${
+                            isActive ? "menu-status-active" : "menu-status-inactive"
+                        }">
+                            ${isActive ? "Active" : "Inactive"}
+                        </span>
+                    </td>
+
+                    <td>
+                        <button
+                            type="button"
+                            class="menu-edit-btn"
+                            data-menu-id="${escapeHTML(menu.id)}"
+                            aria-label="Edit ${escapeHTML(menu.name)}"
+                        >✎ Edit</button>
+
+                        <button
+                            type="button"
+                            class="menu-delete-btn"
+                            data-menu-id="${escapeHTML(menu.id)}"
+                            aria-label="Delete ${escapeHTML(menu.name)}"
+                        >Delete</button>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+
+        const startIndex = totalItems === 0
+            ? 0
+            : ((currentPage - 1) * pageSize) + 1;
+
+        const endIndex = Math.min(currentPage * pageSize, totalItems);
+
+        tableInfo.textContent =
+            `Showing ${startIndex}–${endIndex} of ${totalItems} menus`;
+
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+        previousButton.disabled = currentPage <= 1;
+        nextButton.disabled = currentPage >= totalPages;
+    }
+
+    // =====================================================
+    // 9. API QUERY BUILDER
+    // =====================================================
+
+    function buildListURL({
+        status,
+        page,
+        pageSize,
+        search,
+        sort,
+        direction
+    }) {
+        const url = new URL(MENU_LIST_API_URL, window.location.origin);
+
+        url.searchParams.set("status", status);
+        url.searchParams.set("page", page);
+        url.searchParams.set("page_size", pageSize);
+        url.searchParams.set("search", search);
+        url.searchParams.set("sort_by", sort);
+        url.searchParams.set("sort_dir", direction);
+
+        return url;
+    }
+
+    // =====================================================
+    // 10. FETCH MENUS
+    // =====================================================
+
+    async function fetchMenuPage(
+        status,
+        page,
+        size,
+        search = "",
+        sort = "sort_order",
+        direction = "asc"
+    ) {
+        const url = buildListURL({
+            status,
+            page,
+            pageSize: size,
+            search,
+            sort,
+            direction
+        });
+
+        const response = await fetch(url.toString(), {
+            method: "GET",
+            headers: {
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        });
+
+        const result = await parseJSONResponse(response);
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Unable to load menus.");
+        }
+
+        return result.data;
+    }
+
+    async function fetchAllMenus() {
+        const firstPage = await fetchMenuPage(
+            "all", 1, 100, "", "sort_order", "asc"
+        );
+
+        const firstMenus = firstPage.menus || [];
+        const paginationData = firstPage.pagination || {};
+        const pages = Number(paginationData.total_pages || 1);
+
+        if (pages <= 1) {
+            return firstMenus;
+        }
+
+        const pageRequests = [];
+
+        for (let page = 2; page <= pages; page++) {
+            pageRequests.push(
+                fetchMenuPage("all", page, 100, "", "sort_order", "asc")
+            );
+        }
+
+        const remainingPages = await Promise.all(pageRequests);
+
+        return mergeMenus(
+            firstMenus,
+            ...remainingPages.map(data => data.menus || [])
+        );
+    }
+
+    // =====================================================
+    // 11. LOAD TABLE
+    // =====================================================
+
+    async function loadMenus() {
+        const requestId = ++loadRequestId;
+
+        showMessage("Loading menus...");
+        tableInfo.textContent = "Loading...";
+        previousButton.disabled = true;
+        nextButton.disabled = true;
+
+        try {
+            const [pageData, parentData] = await Promise.all([
+                fetchMenuPage(
+                    statusFilter.value,
+                    currentPage,
+                    pageSize,
+                    searchTerm,
+                    sortField,
+                    sortDirection
+                ),
+                fetchAllMenus()
+            ]);
+
+            // Ignore outdated requests.
+            if (requestId !== loadRequestId) {
+                return;
+            }
+
+            menus = pageData.menus || [];
+            allMenus = parentData;
+
+            const paginationData = pageData.pagination || {};
+
+            currentPage = Number(paginationData.page || currentPage);
+            pageSize = Number(paginationData.page_size || pageSize);
+            totalItems = Number(paginationData.total_items || 0);
+
+            totalPages = Math.max(
+                1,
+                Number(paginationData.total_pages || 1)
+            );
+
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+                await loadMenus();
+                return;
+            }
+
+            populateParentOptions();
+            renderTable();
+
+        } catch (error) {
+            if (requestId !== loadRequestId) {
+                return;
+            }
+
+            console.error("Menu loading error:", error);
+
+            showMessage(error.message || "Failed to load menus.");
+            tableInfo.textContent = "Unable to load menu count.";
+            pageInfo.textContent = "";
+
+            previousButton.disabled = true;
+            nextButton.disabled = true;
+        }
+    }
+
+    // =====================================================
+    // 12. PAGINATION
+    // =====================================================
+
+    previousButton.addEventListener("click", function () {
+        if (currentPage > 1) {
+            currentPage--;
+            loadMenus();
+        }
+    });
+
+    nextButton.addEventListener("click", function () {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadMenus();
+        }
+    });
+
+    // =====================================================
+    // 13. SEARCH
+    // =====================================================
+
+    searchInput.addEventListener("input", function () {
+        clearTimeout(searchTimer);
+
+        searchTimer = setTimeout(function () {
+            searchTerm = searchInput.value.trim();
+            currentPage = 1;
+            loadMenus();
+        }, 350);
+    });
+
+    searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            clearTimeout(searchTimer);
+            searchTerm = searchInput.value.trim();
+            currentPage = 1;
+            loadMenus();
+        }
+    });
+
+    // =====================================================
+    // 14. FILTER AND PAGE SIZE
+    // =====================================================
+
+    statusFilter.addEventListener("change", function () {
+        currentPage = 1;
+        loadMenus();
+    });
+
+    pageSizeSelect.addEventListener("change", function () {
+        pageSize = Number(pageSizeSelect.value) || 10;
+        currentPage = 1;
+        loadMenus();
+    });
+
+    // =====================================================
+    // 15. SORTING
+    // =====================================================
+
+    document.querySelectorAll(".menu-sort-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            const field = button.dataset.sort;
+
+            if (sortField === field) {
+                sortDirection = sortDirection === "asc" ? "desc" : "asc";
+            } else {
+                sortField = field;
+                sortDirection = "asc";
+            }
+
+            currentPage = 1;
+            updateSortIndicators();
+            loadMenus();
+        });
+    });
+
+    // =====================================================
+    // 16. FORM ERROR HANDLING
+    // =====================================================
+
+    function clearFormErrors() {
+        Object.entries(fieldErrorElements).forEach(([field, element]) => {
+            element.textContent = "";
+
+            const input = fieldInputs[field];
+
+            if (input) {
+                input.classList.remove("is-invalid");
+                input.removeAttribute("aria-invalid");
+            }
+        });
+
+        generalErrorBox.textContent = "";
+        generalErrorBox.classList.remove("show");
+    }
+
+    function showGeneralError(message) {
+        generalErrorBox.textContent = message;
+        generalErrorBox.classList.add("show");
+    }
+
+    function displayFormErrors(errors) {
+        clearFormErrors();
+
+        Object.entries(errors || {}).forEach(([field, messages]) => {
+            const message = Array.isArray(messages)
+                ? messages.map(item =>
+                    typeof item === "string"
+                        ? item
+                        : item.message || String(item)
+                ).join(" ")
+                : String(messages);
+
+            if (field === "__all__" || field === "non_field_errors") {
+                showGeneralError(message);
+                return;
+            }
+
+            const input = fieldInputs[field];
+            const errorElement = fieldErrorElements[field];
+
+            if (!input || !errorElement) {
+                showGeneralError(message);
+                return;
+            }
+
+            input.classList.add("is-invalid");
+            input.setAttribute("aria-invalid", "true");
+            errorElement.textContent = message;
+        });
+
+        const firstInvalid = createMenuForm.querySelector(".is-invalid");
+
+        if (firstInvalid) {
+            firstInvalid.focus();
+        }
+    }
+
+    // =====================================================
+    // 17. MODAL FOCUS
+    // =====================================================
+
+    function getFocusableElements(container) {
+        return Array.from(container.querySelectorAll(
+            'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+        )).filter(element => element.offsetParent !== null);
+    }
+
+    function trapFocus(event, overlay) {
+        if (event.key !== "Tab") {
+            return;
+        }
+
+        const focusable = getFocusableElements(overlay);
+
+        if (!focusable.length) {
+            event.preventDefault();
+            return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    }
+
+    // =====================================================
+    // 18. CREATE MODAL
+    // =====================================================
+
+    function openCreateModal() {
+        if (saving || deleting) {
+            return;
+        }
+
+        previousFocusedElement = document.activeElement;
+        editingMenuId = null;
+
+        createMenuForm.reset();
+        clearFormErrors();
+
+        menuModalTitle.textContent = "Create Menu";
+        menuModalDescription.textContent = "Add a new menu to this module.";
+        saveMenuBtn.textContent = "Create Menu";
+        saveMenuBtn.disabled = false;
+
+        menuSortOrderInput.value = "0";
+        menuIsActiveInput.checked = true;
+        menuUrlNameInput.value = "";
+
+        populateParentOptions();
+
+        setModalOpen(menuModalOverlay, true);
+        document.body.style.overflow = "hidden";
+        menuNameInput.focus();
+    }
+
+    // =====================================================
+    // 19. EDIT MODAL
+    // =====================================================
+
+    function openEditModal(menuId) {
+        if (saving || deleting) {
+            return;
+        }
+
+        const menu = getMenuById(menuId);
+
+        if (!menu) {
+            showToast("Menu record not found.", true);
+            return;
+        }
+
+        previousFocusedElement = document.activeElement;
+        editingMenuId = Number(menu.id);
+
+        createMenuForm.reset();
+        clearFormErrors();
+
+        menuModalTitle.textContent = "Edit Menu";
+        menuModalDescription.textContent = "Update the menu details and settings.";
+        saveMenuBtn.textContent = "Save Changes";
+
+        populateParentOptions(menu.id);
+
+        menuParentSelect.value = menu.parent_id
+            ? String(menu.parent_id)
+            : "";
+
+        if (
+            menu.parent_id
+            && menuParentSelect.value !== String(menu.parent_id)
+        ) {
+            const option = document.createElement("option");
+            option.value = String(menu.parent_id);
+            option.textContent = menu.parent_name || "Current parent";
+            menuParentSelect.appendChild(option);
+            menuParentSelect.value = String(menu.parent_id);
+        }
+
+        menuNameInput.value = menu.name || "";
+        menuCodeInput.value = menu.code || "";
+
+        // NEW: Populate URL name when editing.
+        menuUrlNameInput.value = menu.url_name || "";
+
+        menuSortOrderInput.value = menu.sort_order ?? 0;
+        menuIsActiveInput.checked = menu.is_active === true;
+        menuDescriptionInput.value = menu.description || "";
+
+        setModalOpen(menuModalOverlay, true);
+        document.body.style.overflow = "hidden";
+        menuNameInput.focus();
+    }
+
+    function closeMenuModal() {
+        if (
+            saving
+            || !menuModalOverlay.classList.contains("is-open")
+        ) {
+            return;
+        }
+
+        setModalOpen(menuModalOverlay, false);
+        document.body.style.overflow = "";
+
+        createMenuForm.reset();
+        clearFormErrors();
+
+        editingMenuId = null;
+
+        menuModalTitle.textContent = "Create Menu";
+        menuModalDescription.textContent = "Add a new menu to this module.";
+        saveMenuBtn.textContent = "Create Menu";
+
+        if (previousFocusedElement?.focus) {
+            previousFocusedElement.focus();
+        }
+    }
+
+    createButton.addEventListener("click", openCreateModal);
+    closeMenuModalBtn.addEventListener("click", closeMenuModal);
+    cancelMenuBtn.addEventListener("click", closeMenuModal);
+
+    menuModalOverlay.addEventListener("click", function (event) {
+        if (event.target === menuModalOverlay) {
+            closeMenuModal();
+        }
+    });
+
+    menuModalOverlay.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !saving) {
+            closeMenuModal();
+        }
+
+        trapFocus(event, menuModalOverlay);
+    });
+
+    // =====================================================
+    // 20. TABLE ACTIONS
+    // =====================================================
+
+    tableBody.addEventListener("click", function (event) {
+        const editButton = event.target.closest(".menu-edit-btn");
+        const deleteButton = event.target.closest(".menu-delete-btn");
+
+        if (editButton) {
+            openEditModal(editButton.dataset.menuId);
+            return;
+        }
+
+        if (deleteButton) {
+            openDeleteModal(deleteButton.dataset.menuId);
+        }
+    });
+
+    // =====================================================
+    // 21. CREATE / UPDATE
+    // =====================================================
+
+    createMenuForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        if (saving || deleting) {
+            return;
+        }
+
+        clearFormErrors();
+
+        const isEdit = editingMenuId !== null;
+        const targetMenuId = editingMenuId;
+
+        const endpoint = isEdit
+            ? getEditMenuUrl(targetMenuId)
+            : CREATE_MENU_API_URL;
+
+        saving = true;
+        saveMenuBtn.disabled = true;
+
+        saveMenuBtn.textContent = isEdit
+            ? "Saving Changes..."
+            : "Creating Menu...";
+
+        try {
+            const formData = new FormData(createMenuForm);
+
+            formData.set("parent", menuParentSelect.value || "");
+
+            // Ensure URL name is included even if empty.
+            formData.set("url_name", menuUrlNameInput.value.trim());
+
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Accept": "application/json"
+                },
+                body: formData
+            });
+
+            const result = await parseJSONResponse(response);
+
+            if (!response.ok || !result.success) {
+                if (result.errors) {
+                    displayFormErrors(result.errors);
+                } else {
+                    showGeneralError(
+                        result.message || "Unable to save menu."
+                    );
+                }
+                return;
+            }
+
+            setModalOpen(menuModalOverlay, false);
+            document.body.style.overflow = "";
+            editingMenuId = null;
+
+            currentPage = 1;
+            await loadMenus();
+
+            showToast(
+                result.message
+                || (isEdit
+                    ? "Menu updated successfully."
+                    : "Menu created successfully.")
+            );
+
+            if (previousFocusedElement?.focus) {
+                previousFocusedElement.focus();
+            }
+
+        } catch (error) {
+            console.error("Menu save error:", error);
+
+            showGeneralError(
+                error.message || "An unexpected error occurred."
+            );
+
+            showToast("Unable to save menu.", true);
+
+        } finally {
+            saving = false;
+            saveMenuBtn.disabled = false;
+
+            saveMenuBtn.textContent = editingMenuId !== null
+                ? "Save Changes"
+                : "Create Menu";
+        }
+    });
+
+    // Clear individual field errors while editing.
+    Object.entries(fieldInputs).forEach(([field, input]) => {
+        if (!input) {
+            return;
+        }
+
+        function clearFieldError() {
+            input.classList.remove("is-invalid");
+            input.removeAttribute("aria-invalid");
+
+            if (fieldErrorElements[field]) {
+                fieldErrorElements[field].textContent = "";
+            }
+        }
+
+        input.addEventListener("input", clearFieldError);
+        input.addEventListener("change", clearFieldError);
+    });
+
+    // =====================================================
+    // 22. DELETE MODAL
+    // =====================================================
+
+    function openDeleteModal(menuId) {
+        if (saving || deleting) {
+            return;
+        }
+
+        const menu = getMenuById(menuId);
+
+        if (!menu) {
+            showToast("Menu record not found.", true);
+            return;
+        }
+
+        previousDeleteFocusedElement = document.activeElement;
+        deletingMenuId = Number(menu.id);
+
+        deleteMenuName.textContent = menu.name;
+        deleteMenuError.textContent = "";
+
+        confirmDeleteMenuBtn.disabled = false;
+        confirmDeleteMenuBtn.textContent = "Delete Menu";
+
+        setModalOpen(deleteMenuModalOverlay, true);
+        document.body.style.overflow = "hidden";
+        confirmDeleteMenuBtn.focus();
+    }
+
+    function closeDeleteModal() {
+        if (
+            deleting
+            || !deleteMenuModalOverlay.classList.contains("is-open")
+        ) {
+            return;
+        }
+
+        setModalOpen(deleteMenuModalOverlay, false);
+        document.body.style.overflow = "";
+
+        deletingMenuId = null;
+        deleteMenuName.textContent = "";
+        deleteMenuError.textContent = "";
+
+        if (previousDeleteFocusedElement?.focus) {
+            previousDeleteFocusedElement.focus();
+        }
+    }
+
+    closeDeleteMenuModalBtn.addEventListener("click", closeDeleteModal);
+    cancelDeleteMenuBtn.addEventListener("click", closeDeleteModal);
+
+    deleteMenuModalOverlay.addEventListener("click", function (event) {
+        if (event.target === deleteMenuModalOverlay) {
+            closeDeleteModal();
+        }
+    });
+
+    deleteMenuModalOverlay.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !deleting) {
+            closeDeleteModal();
+        }
+
+        trapFocus(event, deleteMenuModalOverlay);
+    });
+
+    async function deleteMenu() {
+        if (deleting || saving || deletingMenuId === null) {
+            return;
+        }
+
+        const menuId = deletingMenuId;
+
+        deleting = true;
+        confirmDeleteMenuBtn.disabled = true;
+        confirmDeleteMenuBtn.textContent = "Deleting...";
+        deleteMenuError.textContent = "";
+
+        try {
+            const response = await fetch(getDeleteMenuUrl(menuId), {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Accept": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                }
+            });
+
+            const result = await parseJSONResponse(response);
+
+            if (!response.ok || !result.success) {
+                deleteMenuError.textContent =
+                    result.message || "Unable to delete menu.";
+                return;
+            }
+
+            setModalOpen(deleteMenuModalOverlay, false);
+            document.body.style.overflow = "";
+
+            deletingMenuId = null;
+            deleteMenuName.textContent = "";
+            deleteMenuError.textContent = "";
+
+            await loadMenus();
+
+            showToast(result.message || "Menu deleted successfully.");
+
+            if (previousDeleteFocusedElement?.focus) {
+                previousDeleteFocusedElement.focus();
+            }
+
+        } catch (error) {
+            console.error("Menu deletion error:", error);
+
+            deleteMenuError.textContent =
+                error.message || "An unexpected error occurred.";
+
+        } finally {
+            deleting = false;
+            confirmDeleteMenuBtn.disabled = false;
+            confirmDeleteMenuBtn.textContent = "Delete Menu";
+        }
+    }
+
+    confirmDeleteMenuBtn.addEventListener("click", deleteMenu);
+
+    // =====================================================
+    // 23. INITIALIZE
+    // =====================================================
+
+    updateSortIndicators();
+    loadMenus();
+});
+</script>
+
+{% endblock %}

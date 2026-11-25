@@ -1,0 +1,2239 @@
+{% extends "base.html" %}
+
+{% block title %}Actions | Garment ERP{% endblock %}
+
+{% block content %}
+<style>
+    /* =========================================
+       ACTION MANAGEMENT
+    ========================================= */
+
+    .actions-page {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .actions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .actions-header h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+    }
+
+    .actions-subtitle {
+        color: #6b7280;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .actions-breadcrumbs {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+        font-size: 14px;
+    }
+
+    .actions-breadcrumbs a {
+        color: #2563eb;
+        text-decoration: none;
+    }
+
+    .actions-breadcrumbs a:hover {
+        text-decoration: underline;
+    }
+
+    .actions-breadcrumbs span {
+        color: #9ca3af;
+    }
+
+    .actions-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .actions-toolbar-left,
+    .actions-toolbar-right {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .actions-search {
+        width: 260px;
+        max-width: 100%;
+    }
+
+    .actions-search input,
+    .actions-filter select,
+    .actions-page-size select {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #fff;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    .actions-filter select {
+        min-width: 140px;
+    }
+
+    .actions-create-btn {
+        border: none;
+        border-radius: 6px;
+        padding: 10px 16px;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .actions-create-btn:hover {
+        background: #1d4ed8;
+    }
+
+    /* =========================================
+       TABLE
+    ========================================= */
+
+    .actions-table-card {
+        width: 100%;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .actions-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .actions-table {
+        width: 100%;
+        min-width: 850px;
+        border-collapse: collapse;
+    }
+
+    .actions-table th,
+    .actions-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        font-size: 14px;
+        vertical-align: middle;
+    }
+
+    .actions-table th {
+        background: #f9fafb;
+        color: #374151;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .actions-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .actions-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .actions-empty-state {
+        text-align: center !important;
+        padding: 40px 20px !important;
+        color: #6b7280;
+    }
+
+    .action-status {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .action-status-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .action-status-inactive {
+        background: #f3f4f6;
+        color: #4b5563;
+    }
+
+    .action-edit-btn,
+    .action-delete-btn {
+        padding: 6px 10px;
+        margin: 2px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .action-edit-btn {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .action-delete-btn {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .action-edit-btn:hover {
+        background: #bfdbfe;
+    }
+
+    .action-delete-btn:hover {
+        background: #fecaca;
+    }
+
+    /* =========================================
+       TABLE FOOTER & PAGINATION
+    ========================================= */
+
+    .actions-table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 14px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .actions-table-info {
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .actions-page-size {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .actions-page-size select {
+        width: auto;
+    }
+
+    .actions-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .actions-pagination button {
+        padding: 7px 11px;
+        border: 1px solid #d1d5db;
+        border-radius: 5px;
+        background: #fff;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .actions-pagination button:hover:not(:disabled) {
+        background: #f3f4f6;
+    }
+
+    .actions-pagination button.active {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+    }
+
+    .actions-pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* =========================================
+       RESPONSIVE
+    ========================================= */
+
+    @media (max-width: 768px) {
+        .actions-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .actions-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .actions-toolbar-left,
+        .actions-toolbar-right {
+            width: 100%;
+        }
+
+        .actions-search {
+            width: 100%;
+        }
+
+        .actions-filter,
+        .actions-filter select {
+            width: 100%;
+        }
+
+        .actions-create-btn {
+            width: 100%;
+        }
+
+        .actions-table-footer {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .actions-pagination {
+            width: 100%;
+        }
+
+        .actions-header h1 {
+            font-size: 21px;
+        }
+    }
+        /* =========================================
+       CREATE / EDIT ACTION MODAL
+    ========================================= */
+
+    .action-modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: rgba(17, 24, 39, 0.55);
+        overflow-y: auto;
+    }
+
+    .action-modal-overlay.open {
+        display: flex;
+    }
+
+    .action-modal {
+        width: 100%;
+        max-width: 520px;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    }
+
+    .action-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 20px 24px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .action-modal-header h2 {
+        margin: 0;
+        font-size: 20px;
+        color: #111827;
+    }
+
+    .action-modal-close {
+        border: none;
+        background: transparent;
+        color: #6b7280;
+        font-size: 28px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 2px 8px;
+    }
+
+    .action-modal-close:hover {
+        color: #111827;
+    }
+
+    #actionForm {
+        padding: 24px;
+    }
+
+    .action-form-group {
+        margin-bottom: 18px;
+    }
+
+    .action-form-group > label {
+        display: block;
+        margin-bottom: 7px;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .action-form-group input[type="text"],
+    .action-form-group input[type="number"],
+    .action-form-group textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .action-form-group textarea {
+        resize: vertical;
+        min-height: 90px;
+    }
+
+    .action-form-group input:focus,
+    .action-form-group textarea:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .action-form-group input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #2563eb;
+    }
+
+    .action-form-group .required {
+        color: #dc2626;
+    }
+
+    .action-form-checkbox > label {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        cursor: pointer;
+    }
+
+    .action-field-error {
+        display: none;
+        margin-top: 5px;
+        color: #dc2626;
+        font-size: 13px;
+    }
+
+    .action-field-error.show {
+        display: block;
+    }
+
+    .action-form-general-error {
+        display: none;
+        margin-bottom: 16px;
+        padding: 10px 12px;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        background: #fef2f2;
+        color: #b91c1c;
+        font-size: 14px;
+    }
+
+    .action-form-general-error.show {
+        display: block;
+    }
+
+    .action-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 24px;
+        padding-top: 18px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .action-cancel-btn,
+    .action-save-btn {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .action-cancel-btn {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .action-cancel-btn:hover {
+        background: #e5e7eb;
+    }
+
+    .action-save-btn {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    .action-save-btn:hover {
+        background: #1d4ed8;
+    }
+
+    .action-save-btn:disabled,
+    .action-cancel-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Modal responsive behavior */
+    @media (max-width: 480px) {
+        .action-modal-overlay {
+            padding: 8px;
+            align-items: flex-start;
+        }
+
+        .action-modal {
+            max-height: calc(100vh - 16px);
+            border-radius: 9px;
+            margin: auto 0;
+        }
+
+        .action-modal-header {
+            padding: 16px;
+        }
+
+        #actionForm {
+            padding: 16px;
+        }
+
+        .action-modal-footer {
+            flex-direction: column-reverse;
+        }
+
+        .action-modal-footer button {
+            width: 100%;
+        }
+    }
+        /* =========================================
+       DELETE ACTION MODAL
+    ========================================= */
+
+    .action-delete-modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1001;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: rgba(17, 24, 39, 0.55);
+        overflow-y: auto;
+    }
+
+    .action-delete-modal-overlay.open {
+        display: flex;
+    }
+
+    .action-delete-modal {
+        width: 100%;
+        max-width: 440px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+    }
+
+    .action-delete-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 22px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .action-delete-modal-header h2 {
+        margin: 0;
+        font-size: 19px;
+        color: #b91c1c;
+    }
+
+    .action-delete-modal-close {
+        border: none;
+        background: transparent;
+        color: #6b7280;
+        font-size: 28px;
+        line-height: 1;
+        padding: 2px 8px;
+        cursor: pointer;
+    }
+
+    .action-delete-modal-close:hover {
+        color: #111827;
+    }
+
+    .action-delete-modal-body {
+        padding: 22px;
+        color: #374151;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .action-delete-modal-body p {
+        margin: 0 0 14px;
+    }
+
+    .action-delete-record {
+        padding: 12px 14px;
+        margin: 12px 0;
+        border: 1px solid #e5e7eb;
+        border-radius: 7px;
+        background: #f9fafb;
+        color: #111827;
+        overflow-wrap: anywhere;
+    }
+
+    .action-delete-warning {
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .action-delete-error {
+        display: none;
+        margin-top: 14px;
+        padding: 11px 12px;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        background: #fef2f2;
+        color: #b91c1c;
+        font-size: 13px;
+        overflow-wrap: anywhere;
+    }
+
+    .action-delete-error.show {
+        display: block;
+    }
+
+    .action-delete-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 16px 22px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .action-delete-cancel-btn,
+    .action-delete-confirm-btn {
+        padding: 9px 15px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .action-delete-cancel-btn {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .action-delete-cancel-btn:hover {
+        background: #e5e7eb;
+    }
+
+    .action-delete-confirm-btn {
+        background: #dc2626;
+        color: #ffffff;
+    }
+
+    .action-delete-confirm-btn:hover {
+        background: #b91c1c;
+    }
+
+    .action-delete-confirm-btn:disabled,
+    .action-delete-cancel-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 480px) {
+        .action-delete-modal-overlay {
+            padding: 8px;
+        }
+
+        .action-delete-modal {
+            max-width: 100%;
+            border-radius: 9px;
+        }
+
+        .action-delete-modal-header,
+        .action-delete-modal-footer {
+            padding: 15px 16px;
+        }
+
+        .action-delete-modal-footer {
+            flex-direction: column-reverse;
+        }
+
+        .action-delete-modal-footer button {
+            width: 100%;
+        }
+
+        .action-delete-modal-body {
+            padding: 16px;
+        }
+    }
+
+/* =========================================
+   ACTION TOAST NOTIFICATION
+========================================= */
+
+#actionToast {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 2000;
+
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 14px 20px;
+
+    background: #166534;
+    color: #ffffff;
+
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
+
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+
+    transition:
+        opacity 0.25s ease,
+        transform 0.25s ease,
+        visibility 0.25s ease;
+
+    overflow-wrap: anywhere;
+}
+
+#actionToast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+    #actionToast {
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+        max-width: none;
+        text-align: center;
+    }
+}
+
+</style>
+
+<div class="actions-page">
+
+    <!-- Breadcrumbs -->
+    <div class="actions-breadcrumbs">
+        <a href="{% url 'access_control:menu_list' module.id %}">
+            Menus
+        </a>
+
+        <span> / </span>
+
+        <span>{{ menu.name }}</span>
+
+        <span> / </span>
+
+        <strong>Actions</strong>
+    </div>
+
+    <!-- Page Header -->
+    <div class="actions-header">
+        <div>
+            <h1>Action Management</h1>
+
+            <p class="actions-subtitle">
+                Manage actions for menu:
+                <strong>{{ menu.name }}</strong>
+            </p>
+        </div>
+
+        <button
+            type="button"
+            class="actions-create-btn"
+            id="createActionBtn"
+        >
+            + Create Action
+        </button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="actions-toolbar">
+
+        <div class="actions-toolbar-left">
+
+            <!-- Search -->
+            <div class="actions-search">
+                <input
+                    type="search"
+                    id="actionSearch"
+                    placeholder="Search actions by name or code..."
+                    autocomplete="off"
+                >
+            </div>
+
+            <!-- Status Filter -->
+            <div class="actions-filter">
+                <select id="actionStatusFilter">
+                    <option value="active" selected>Active Actions</option>
+                    <option value="inactive">Inactive Actions</option>
+                    <option value="all">All Actions</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="actions-toolbar-right">
+
+            <!-- Page Size -->
+            <div class="actions-page-size">
+                <label for="actionPageSize">Rows:</label>
+
+                <select id="actionPageSize">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Actions Table -->
+    <div class="actions-table-card">
+
+        <div class="actions-table-wrapper">
+            <table class="actions-table">
+                <thead>
+                    <tr>
+                        <th data-sort="name">Action Name</th>
+                        <th data-sort="code">Code</th>
+                        <th>Description</th>
+                        <th data-sort="sort_order">Sort Order</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="actionsTableBody">
+                    <tr>
+                        <td colspan="6" class="actions-empty-state">
+                            Loading actions...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Table Footer -->
+        <div class="actions-table-footer">
+
+            <div
+                class="actions-table-info"
+                id="actionsTableInfo"
+            >
+                Loading...
+            </div>
+
+            <div
+                class="actions-pagination"
+                id="actionsPagination"
+            >
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Toast Notification -->
+<div id="actionToast"></div>
+
+<!-- Create / Edit Action Modal -->
+<div
+    class="action-modal-overlay"
+    id="actionModalOverlay"
+    aria-hidden="true"
+>
+    <div
+        class="action-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="actionModalTitle"
+    >
+
+        <!-- Modal Header -->
+        <div class="action-modal-header">
+            <h2 id="actionModalTitle">Create Action</h2>
+
+            <button
+                type="button"
+                class="action-modal-close"
+                id="closeActionModalBtn"
+                aria-label="Close modal"
+            >
+                &times;
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <form id="actionForm" novalidate>
+
+            {% csrf_token %}
+
+            <div
+                class="action-form-general-error"
+                id="actionFormGeneralError"
+            ></div>
+
+            <!-- Action Name -->
+            <div class="action-form-group">
+                <label for="actionName">
+                    Action Name <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="actionName"
+                    name="name"
+                    maxlength="100"
+                    placeholder="Enter action name"
+                    required
+                >
+
+                <div
+                    class="action-field-error"
+                    data-error-for="name"
+                ></div>
+            </div>
+
+            <!-- Action Code -->
+            <div class="action-form-group">
+                <label for="actionCode">
+                    Action Code <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="actionCode"
+                    name="code"
+                    maxlength="100"
+                    placeholder="e.g. view_actions"
+                    required
+                >
+
+                <div
+                    class="action-field-error"
+                    data-error-for="code"
+                ></div>
+            </div>
+
+            <!-- Description -->
+            <div class="action-form-group">
+                <label for="actionDescription">
+                    Description
+                </label>
+
+                <textarea
+                    id="actionDescription"
+                    name="description"
+                    rows="3"
+                    placeholder="Describe what this action allows a user to do..."
+                ></textarea>
+
+                <div
+                    class="action-field-error"
+                    data-error-for="description"
+                ></div>
+            </div>
+
+            <!-- Sort Order -->
+            <div class="action-form-group">
+                <label for="actionSortOrder">
+                    Sort Order
+                </label>
+
+                <input
+                    type="number"
+                    id="actionSortOrder"
+                    name="sort_order"
+                    value="0"
+                >
+
+                <div
+                    class="action-field-error"
+                    data-error-for="sort_order"
+                ></div>
+            </div>
+
+            <!-- Active Status -->
+            <div class="action-form-group action-form-checkbox">
+                <label for="actionIsActive">
+                    <input
+                        type="checkbox"
+                        id="actionIsActive"
+                name="is_active"
+                    checked
+                >
+                    Active
+                </label>
+
+                <div
+                    class="action-field-error"
+                    data-error-for="is_active"
+                ></div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="action-modal-footer">
+
+                <button
+                    type="button"
+                    class="action-cancel-btn"
+                    id="cancelActionBtn"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="action-save-btn"
+                    id="saveActionBtn"
+                >
+                    Create Action
+                </button>
+
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- Delete Action Confirmation Modal -->
+<div
+    class="action-delete-modal-overlay"
+    id="deleteActionModalOverlay"
+    aria-hidden="true"
+>
+    <div
+        class="action-delete-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deleteActionModalTitle"
+    >
+
+        <!-- Header -->
+        <div class="action-delete-modal-header">
+            <h2 id="deleteActionModalTitle">Delete Action</h2>
+
+            <button
+                type="button"
+                id="closeDeleteActionModalBtn"
+                class="action-delete-modal-close"
+                aria-label="Close modal"
+            >
+                &times;
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="action-delete-modal-body">
+
+            <p>
+                Are you sure you want to delete this action?
+            </p>
+
+            <div class="action-delete-record">
+                <strong id="deleteActionName"></strong>
+            </div>
+
+            <p class="action-delete-warning">
+                This action cannot be deleted if it has existing group
+                or user permission assignments.
+            </p>
+
+            <div
+                id="deleteActionError"
+                class="action-delete-error"
+                role="alert"
+            ></div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="action-delete-modal-footer">
+
+            <button
+                type="button"
+                class="action-delete-cancel-btn"
+                id="cancelDeleteActionBtn"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="action-delete-confirm-btn"
+                id="confirmDeleteActionBtn"
+            >
+                Delete Action
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+
+
+
+
+
+<script>
+
+(() => {
+    "use strict";
+
+    // =============================================
+    // 1. API CONFIGURATION
+    // =============================================
+
+    const ACTION_LIST_API_URL =
+        "{% url 'access_control:action_list' module.id menu.id %}";
+
+    const CREATE_ACTION_API_URL =
+        "{% url 'access_control:action_create' module.id menu.id %}";
+
+    const EDIT_ACTION_URL_TEMPLATE =
+        "{% url 'access_control:action_edit' module.id menu.id 0 %}";
+
+    const DELETE_ACTION_URL_TEMPLATE =
+        "{% url 'access_control:action_delete' module.id menu.id 0 %}";
+
+    function getEditActionUrl(actionId) {
+        return EDIT_ACTION_URL_TEMPLATE.replace(
+            /\/0\/edit\/$/,
+            `/${actionId}/edit/`
+        );
+    }
+
+    function getDeleteActionUrl(actionId) {
+        return DELETE_ACTION_URL_TEMPLATE.replace(
+            /\/0\/delete\/$/,
+            `/${actionId}/delete/`
+        );
+    }
+
+    // =============================================
+    // 2. DOM ELEMENTS
+    // =============================================
+
+    const tableBody = document.getElementById("actionsTableBody");
+    const searchInput = document.getElementById("actionSearch");
+    const statusFilter = document.getElementById("actionStatusFilter");
+    const pageSizeSelect = document.getElementById("actionPageSize");
+    const tableInfo = document.getElementById("actionsTableInfo");
+    const pagination = document.getElementById("actionsPagination");
+    const createButton = document.getElementById("createActionBtn");
+
+    // Create / Edit modal
+    const modal = document.getElementById("actionModalOverlay");
+    const form = document.getElementById("actionForm");
+    const modalTitle = document.getElementById("actionModalTitle");
+    const saveButton = document.getElementById("saveActionBtn");
+    const closeButton = document.getElementById("closeActionModalBtn");
+    const cancelButton = document.getElementById("cancelActionBtn");
+
+    const generalError = document.getElementById(
+        "actionFormGeneralError"
+    );
+
+    const nameInput = document.getElementById("actionName");
+    const codeInput = document.getElementById("actionCode");
+
+    const descriptionInput = document.getElementById(
+        "actionDescription"
+    );
+
+    const sortOrderInput = document.getElementById("actionSortOrder");
+    const activeInput = document.getElementById("actionIsActive");
+
+    // Delete modal
+    const deleteModal = document.getElementById(
+        "deleteActionModalOverlay"
+    );
+
+    const deleteActionName = document.getElementById(
+        "deleteActionName"
+    );
+
+    const deleteError = document.getElementById(
+        "deleteActionError"
+    );
+
+    const confirmDeleteButton = document.getElementById(
+        "confirmDeleteActionBtn"
+    );
+
+    const closeDeleteButton = document.getElementById(
+        "closeDeleteActionModalBtn"
+    );
+
+    const cancelDeleteButton = document.getElementById(
+        "cancelDeleteActionBtn"
+    );
+
+    // Toast
+    const toast = document.getElementById("actionToast");
+
+    // =============================================
+    // 3. DOM VALIDATION
+    // =============================================
+
+    const requiredElements = {
+        tableBody,
+        searchInput,
+        statusFilter,
+        pageSizeSelect,
+        tableInfo,
+        pagination,
+        createButton,
+        modal,
+        form,
+        modalTitle,
+        saveButton,
+        closeButton,
+        cancelButton,
+        generalError,
+        nameInput,
+        codeInput,
+        descriptionInput,
+        sortOrderInput,
+        activeInput,
+        deleteModal,
+        deleteActionName,
+        deleteError,
+        confirmDeleteButton,
+        closeDeleteButton,
+        cancelDeleteButton,
+        toast
+    };
+
+    const missingElements = Object.entries(requiredElements)
+        .filter(([, element]) => !element)
+        .map(([name]) => name);
+
+    if (missingElements.length) {
+        console.error(
+            "Action Management: Missing DOM elements:",
+            missingElements
+        );
+        return;
+    }
+
+    // =============================================
+    // 4. STATE
+    // =============================================
+
+    let actions = [];
+
+    let currentPage = 1;
+    let pageSize = Number(pageSizeSelect.value) || 10;
+    let paginationData = null;
+
+    let searchTerm = "";
+    let sortField = "sort_order";
+    let sortDirection = "asc";
+
+    let loading = false;
+    let savingAction = false;
+    let deletingAction = false;
+
+    let editingActionId = null;
+    let deletingActionId = null;
+
+    let searchTimer = null;
+    let toastTimer = null;
+    let requestSequence = 0;
+
+    // =============================================
+    // 5. GENERAL HELPERS
+    // =============================================
+
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[character]);
+    }
+
+    function showMessage(message) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="actions-empty-state">
+                    ${escapeHTML(message)}
+                </td>
+            </tr>
+        `;
+    }
+
+    function showToast(message) {
+        clearTimeout(toastTimer);
+
+        toast.textContent = message;
+        toast.classList.remove("show");
+
+        void toast.offsetWidth;
+
+        toast.classList.add("show");
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3500);
+    }
+
+    function getActionById(actionId) {
+        return actions.find(
+            action => Number(action.id) === Number(actionId)
+        ) || null;
+    }
+
+    function getCsrfToken() {
+        return form.querySelector(
+            '[name="csrfmiddlewaretoken"]'
+        )?.value;
+    }
+
+    // =============================================
+    // 6. FORM ERROR HANDLING
+    // =============================================
+
+    function clearFormErrors() {
+        form.querySelectorAll(".action-field-error").forEach(
+            element => {
+                element.textContent = "";
+                element.style.display = "none";
+            }
+        );
+
+        generalError.textContent = "";
+        generalError.classList.remove("show");
+    }
+
+    function showGeneralError(message) {
+        generalError.textContent = message;
+        generalError.classList.add("show");
+    }
+
+    function showBackendErrors(errors) {
+        let foundFieldError = false;
+
+        Object.entries(errors || {}).forEach(([field, message]) => {
+            const errorElement = form.querySelector(
+                `[data-error-for="${field}"]`
+            );
+
+            if (!errorElement) return;
+
+            errorElement.textContent = Array.isArray(message)
+                ? message.join(" ")
+                : String(message);
+
+            errorElement.style.display = "block";
+            foundFieldError = true;
+        });
+
+        if (!foundFieldError) {
+            showGeneralError(
+                "Please correct the form errors and try again."
+            );
+        }
+    }
+
+    // =============================================
+    // 7. CREATE / EDIT MODAL MANAGEMENT
+    // =============================================
+
+    function openModal() {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+
+        nameInput.focus();
+    }
+
+    function closeModal() {
+        if (savingAction) return;
+
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+
+        form.reset();
+        clearFormErrors();
+
+        editingActionId = null;
+
+        modalTitle.textContent = "Create Action";
+        saveButton.textContent = "Create Action";
+        saveButton.disabled = false;
+    }
+
+    function openCreateModal() {
+        if (savingAction || deletingAction) return;
+
+        form.reset();
+        clearFormErrors();
+
+        editingActionId = null;
+
+        modalTitle.textContent = "Create Action";
+        saveButton.textContent = "Create Action";
+        saveButton.disabled = false;
+
+        openModal();
+    }
+
+    // =============================================
+    // 8. EDIT ACTION
+    // =============================================
+
+    function openEditModal(actionId) {
+        if (savingAction || deletingAction || loading) return;
+
+        const action = getActionById(actionId);
+
+        if (!action) {
+            showToast(
+                "Action not found. Please refresh the page."
+            );
+            return;
+        }
+
+        form.reset();
+        clearFormErrors();
+
+        editingActionId = Number(action.id);
+
+        nameInput.value = action.name ?? "";
+        codeInput.value = action.code ?? "";
+        descriptionInput.value = action.description ?? "";
+        sortOrderInput.value = action.sort_order ?? 0;
+        activeInput.checked = Boolean(action.is_active);
+
+        modalTitle.textContent = "Edit Action";
+        saveButton.textContent = "Update Action";
+        saveButton.disabled = false;
+
+        openModal();
+    }
+
+    // =============================================
+    // 9. FRONTEND VALIDATION
+    // =============================================
+
+    function validateForm() {
+        clearFormErrors();
+
+        const name = nameInput.value.trim();
+        const code = codeInput.value.trim();
+        const sortOrder = sortOrderInput.value.trim();
+
+        if (!name) {
+            showGeneralError("Action name is required.");
+            nameInput.focus();
+            return false;
+        }
+
+        if (!code) {
+            showGeneralError("Action code is required.");
+            codeInput.focus();
+            return false;
+        }
+
+        if (
+            sortOrder === "" ||
+            !Number.isInteger(Number(sortOrder))
+        ) {
+            showGeneralError(
+                "Sort order must be a valid integer."
+            );
+            sortOrderInput.focus();
+            return false;
+        }
+
+        if (Number(sortOrder) < 0) {
+            showGeneralError(
+                "Sort order cannot be negative."
+            );
+            sortOrderInput.focus();
+            return false;
+        }
+
+        return true;
+    }
+
+    // =============================================
+    // 10. CREATE / UPDATE ACTION
+    // =============================================
+
+    async function submitAction() {
+        if (savingAction || deletingAction) return;
+
+        if (!validateForm()) return;
+
+        const isEditing = editingActionId !== null;
+        const actionId = editingActionId;
+
+        savingAction = true;
+        saveButton.disabled = true;
+
+        saveButton.textContent = isEditing
+            ? "Updating..."
+            : "Saving...";
+
+        try {
+            const csrfToken = getCsrfToken();
+
+            if (!csrfToken) {
+                throw new Error("CSRF token is missing.");
+            }
+
+            const formData = new FormData(form);
+
+            formData.set(
+                "is_active",
+                activeInput.checked ? "true" : "false"
+            );
+
+            const url = isEditing
+                ? getEditActionUrl(actionId)
+                : CREATE_ACTION_API_URL;
+
+            const response = await fetch(url, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            let result;
+
+            try {
+                result = await response.json();
+            } catch {
+                throw new Error(
+                    "The server returned an invalid response."
+                );
+            }
+
+            if (!response.ok) {
+                if (result.errors) {
+                    showBackendErrors(result.errors);
+                } else {
+                    showGeneralError(
+                        result.message || "Unable to save action."
+                    );
+                }
+
+                return;
+            }
+
+            if (!result.success) {
+                showGeneralError(
+                    result.message || "Action operation failed."
+                );
+                return;
+            }
+
+            const successMessage = result.message ||
+                (isEditing
+                    ? "Action updated successfully."
+                    : "Action created successfully.");
+
+            modal.classList.remove("open");
+            modal.setAttribute("aria-hidden", "true");
+
+            form.reset();
+            clearFormErrors();
+
+            editingActionId = null;
+
+            modalTitle.textContent = "Create Action";
+            saveButton.textContent = "Create Action";
+
+            await fetchActions();
+
+            showToast(successMessage);
+
+        } catch (error) {
+            console.error("Action Save Error:", error);
+
+            showGeneralError(
+                error.message ||
+                "A network error occurred. Please try again."
+            );
+
+        } finally {
+            savingAction = false;
+
+            saveButton.disabled = false;
+            saveButton.textContent = editingActionId !== null
+                ? "Update Action"
+                : "Create Action";
+        }
+    }
+
+    // =============================================
+    // 11. CREATE / EDIT MODAL EVENTS
+    // =============================================
+
+    createButton.addEventListener("click", openCreateModal);
+
+    closeButton.addEventListener("click", closeModal);
+    cancelButton.addEventListener("click", closeModal);
+
+    modal.addEventListener("click", event => {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    form.addEventListener("submit", event => {
+        event.preventDefault();
+        submitAction();
+    });
+
+    // =============================================
+    // 12. DELETE MODAL MANAGEMENT
+    // =============================================
+
+    function showDeleteError(message) {
+        deleteError.textContent = message;
+        deleteError.classList.add("show");
+    }
+
+    function clearDeleteError() {
+        deleteError.textContent = "";
+        deleteError.classList.remove("show");
+    }
+
+    function openDeleteModal(actionId) {
+        if (deletingAction || savingAction || loading) return;
+
+        const action = getActionById(actionId);
+
+        if (!action) {
+            showToast(
+                "Action not found. Please refresh the page."
+            );
+            return;
+        }
+
+        deletingActionId = Number(action.id);
+
+        deleteActionName.textContent =
+            `${action.name} (${action.code})`;
+
+        clearDeleteError();
+
+        confirmDeleteButton.disabled = false;
+        confirmDeleteButton.textContent = "Delete Action";
+
+        deleteModal.classList.add("open");
+        deleteModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeDeleteModal() {
+        if (deletingAction) return;
+
+        deleteModal.classList.remove("open");
+        deleteModal.setAttribute("aria-hidden", "true");
+
+        deletingActionId = null;
+
+        deleteActionName.textContent = "";
+        clearDeleteError();
+
+        confirmDeleteButton.disabled = false;
+        confirmDeleteButton.textContent = "Delete Action";
+    }
+
+    closeDeleteButton.addEventListener(
+        "click",
+        closeDeleteModal
+    );
+
+    cancelDeleteButton.addEventListener(
+        "click",
+        closeDeleteModal
+    );
+
+    deleteModal.addEventListener("click", event => {
+        if (event.target === deleteModal) {
+            closeDeleteModal();
+        }
+    });
+
+    // =============================================
+    // 13. DELETE ACTION API
+    // =============================================
+
+    async function deleteAction() {
+        if (deletingAction || deletingActionId === null) {
+            return;
+        }
+
+        const actionId = deletingActionId;
+
+        deletingAction = true;
+
+        confirmDeleteButton.disabled = true;
+        confirmDeleteButton.textContent = "Deleting...";
+
+        closeDeleteButton.disabled = true;
+        cancelDeleteButton.disabled = true;
+
+        clearDeleteError();
+
+        try {
+            const csrfToken = getCsrfToken();
+
+            if (!csrfToken) {
+                throw new Error("CSRF token is missing.");
+            }
+
+            const response = await fetch(
+                getDeleteActionUrl(actionId),
+                {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrfToken,
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                }
+            );
+
+            let result;
+
+            try {
+                result = await response.json();
+            } catch {
+                throw new Error(
+                    "The server returned an invalid response."
+                );
+            }
+
+            // Handle permission assignment conflict (HTTP 409),
+            // permission errors, and other backend errors.
+            if (!response.ok || !result.success) {
+                showDeleteError(
+                    result.message ||
+                    "Unable to delete this action."
+                );
+                return;
+            }
+
+            const successMessage = result.message ||
+                "Action deleted successfully.";
+
+            // Close the confirmation modal.
+            deleteModal.classList.remove("open");
+            deleteModal.setAttribute("aria-hidden", "true");
+
+            deletingActionId = null;
+
+            deleteActionName.textContent = "";
+            clearDeleteError();
+
+            // Refresh the table.
+            await fetchActions();
+
+            // If the deleted action was the only item on the
+            // current page, move to the previous page.
+            if (
+                actions.length === 0 &&
+                currentPage > 1
+            ) {
+                currentPage -= 1;
+                await fetchActions();
+            }
+
+            showToast(successMessage);
+
+        } catch (error) {
+            console.error("Action Delete Error:", error);
+
+            showDeleteError(
+                error.message ||
+                "A network error occurred. Please try again."
+            );
+
+        } finally {
+            deletingAction = false;
+
+            confirmDeleteButton.disabled = false;
+            confirmDeleteButton.textContent = "Delete Action";
+
+            closeDeleteButton.disabled = false;
+            cancelDeleteButton.disabled = false;
+        }
+    }
+
+    confirmDeleteButton.addEventListener(
+        "click",
+        deleteAction
+    );
+
+    // =============================================
+    // 14. KEYBOARD EVENTS
+    // =============================================
+
+    document.addEventListener("keydown", event => {
+        if (
+            event.key !== "Escape"
+        ) {
+            return;
+        }
+
+        if (modal.classList.contains("open")) {
+            closeModal();
+        }
+
+        if (deleteModal.classList.contains("open")) {
+            closeDeleteModal();
+        }
+    });
+
+    // =============================================
+    // 15. TABLE RENDERING
+    // =============================================
+
+    function renderActions() {
+        if (!actions.length) {
+            showMessage("No actions found.");
+            return;
+        }
+
+        tableBody.innerHTML = actions.map(action => `
+            <tr>
+                <td>${escapeHTML(action.name)}</td>
+
+                <td>
+                    <code>${escapeHTML(action.code)}</code>
+                </td>
+
+                <td>
+                    ${escapeHTML(action.description || "—")}
+                </td>
+
+                <td>
+                    ${escapeHTML(action.sort_order)}
+                </td>
+
+                <td>
+                    <span class="action-status ${
+                        action.is_active
+                            ? "action-status-active"
+                            : "action-status-inactive"
+                    }">
+                        ${action.is_active ? "Active" : "Inactive"}
+                    </span>
+                </td>
+
+                <td>
+                    <button
+                        type="button"
+                        class="action-edit-btn"
+                        data-action-id="${escapeHTML(action.id)}"
+                    >
+                        Edit
+                    </button>
+
+                    <button
+                        type="button"
+                        class="action-delete-btn"
+                        data-action-id="${escapeHTML(action.id)}"
+                    >
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        `).join("");
+    }
+
+    // =============================================
+    // 16. TABLE BUTTON EVENT DELEGATION
+    // =============================================
+
+    tableBody.addEventListener("click", event => {
+        const editButton = event.target.closest(
+            ".action-edit-btn"
+        );
+
+        const deleteButton = event.target.closest(
+            ".action-delete-btn"
+        );
+
+        if (loading || savingAction || deletingAction) {
+            return;
+        }
+
+        if (editButton) {
+            openEditModal(editButton.dataset.actionId);
+            return;
+        }
+
+        if (deleteButton) {
+            openDeleteModal(deleteButton.dataset.actionId);
+        }
+    });
+
+    // =============================================
+    // 17. PAGINATION INFORMATION
+    // =============================================
+
+    function renderPaginationInfo() {
+        if (!paginationData) {
+            tableInfo.textContent = "";
+            return;
+        }
+
+        const total = paginationData.total_items;
+        const page = paginationData.page;
+        const size = paginationData.page_size;
+
+        const start = total === 0
+            ? 0
+            : ((page - 1) * size) + 1;
+
+        const end = Math.min(page * size, total);
+
+        tableInfo.textContent =
+            `Showing ${start}–${end} of ${total} actions`;
+    }
+
+    // =============================================
+    // 18. PAGINATION CONTROLS
+    // =============================================
+
+    function getPageNumbers(current, total) {
+        if (total <= 7) {
+            return Array.from(
+                { length: total },
+                (_, index) => index + 1
+            );
+        }
+
+        const pages = new Set([
+            1,
+            total,
+            current,
+            current - 1,
+            current + 1,
+            2,
+            total - 1
+        ]);
+
+        const sorted = [...pages]
+            .filter(page => page >= 1 && page <= total)
+            .sort((a, b) => a - b);
+
+        const result = [];
+        let previous = null;
+
+        sorted.forEach(page => {
+            if (previous !== null && page - previous > 1) {
+                result.push("...");
+            }
+
+            result.push(page);
+            previous = page;
+        });
+
+        return result;
+    }
+
+    function renderPaginationControls() {
+        if (
+            !paginationData ||
+            paginationData.total_pages <= 1
+        ) {
+            pagination.innerHTML = "";
+            return;
+        }
+
+        const current = paginationData.page;
+        const total = paginationData.total_pages;
+
+        let html = `
+            <button
+                type="button"
+                data-page="${current - 1}"
+                ${!paginationData.has_previous ? "disabled" : ""}
+            >
+                Previous
+            </button>
+        `;
+
+        getPageNumbers(current, total).forEach(page => {
+            if (page === "...") {
+                html += `<span>…</span>`;
+                return;
+            }
+
+            html += `
+                <button
+                    type="button"
+                    data-page="${page}"
+                    class="${page === current ? "active" : ""}"
+                    ${page === current ? 'aria-current="page"' : ""}
+                >
+                    ${page}
+                </button>
+            `;
+        });
+
+        html += `
+            <button
+                type="button"
+                data-page="${current + 1}"
+                ${!paginationData.has_next ? "disabled" : ""}
+            >
+                Next
+            </button>
+        `;
+
+        pagination.innerHTML = html;
+    }
+
+    pagination.addEventListener("click", event => {
+        const button = event.target.closest(
+            "button[data-page]"
+        );
+
+        if (
+            !button ||
+            button.disabled ||
+            loading ||
+            savingAction ||
+            deletingAction
+        ) {
+            return;
+        }
+
+        const requestedPage = Number(button.dataset.page);
+
+        if (
+            !paginationData ||
+            requestedPage < 1 ||
+            requestedPage > paginationData.total_pages ||
+            requestedPage === currentPage
+        ) {
+            return;
+        }
+
+        currentPage = requestedPage;
+        fetchActions();
+    });
+
+    // =============================================
+    // 19. FETCH ACTIONS
+    // =============================================
+
+    async function fetchActions() {
+        const requestId = ++requestSequence;
+
+        loading = true;
+
+        showMessage("Loading actions...");
+
+        const params = new URLSearchParams({
+            page: String(currentPage),
+            page_size: String(pageSize),
+            search: searchTerm,
+            status: statusFilter.value,
+            sort_by: sortField,
+            sort_dir: sortDirection
+        });
+
+        try {
+            const response = await fetch(
+                `${ACTION_LIST_API_URL}?${params.toString()}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                }
+            );
+
+            let result;
+
+            try {
+                result = await response.json();
+            } catch {
+                throw new Error(
+                    "The server returned an invalid response."
+                );
+            }
+
+            if (requestId !== requestSequence) return;
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.message || "Failed to load actions."
+                );
+            }
+
+            actions = result.data.actions || [];
+            paginationData = result.data.pagination || null;
+
+            if (paginationData) {
+                currentPage = paginationData.page;
+                pageSize = paginationData.page_size;
+            }
+
+            renderActions();
+            renderPaginationInfo();
+            renderPaginationControls();
+
+        } catch (error) {
+            if (requestId !== requestSequence) return;
+
+            actions = [];
+            paginationData = null;
+
+            renderPaginationInfo();
+            renderPaginationControls();
+
+            showMessage(
+                error.message || "Unable to load actions."
+            );
+
+            console.error("Action List Error:", error);
+
+        } finally {
+            if (requestId === requestSequence) {
+                loading = false;
+            }
+        }
+    }
+
+    // =============================================
+    // 20. SEARCH
+    // =============================================
+
+    searchInput.addEventListener("input", () => {
+        clearTimeout(searchTimer);
+
+        searchTimer = setTimeout(() => {
+            searchTerm = searchInput.value.trim();
+            currentPage = 1;
+            fetchActions();
+        }, 350);
+    });
+
+    // =============================================
+    // 21. STATUS FILTER
+    // =============================================
+
+    statusFilter.addEventListener("change", () => {
+        currentPage = 1;
+        fetchActions();
+    });
+
+    // =============================================
+    // 22. PAGE SIZE
+    // =============================================
+
+    pageSizeSelect.addEventListener("change", () => {
+        pageSize = Number(pageSizeSelect.value) || 10;
+        currentPage = 1;
+        fetchActions();
+    });
+
+    // =============================================
+    // 23. SORTING
+    // =============================================
+
+    document.querySelectorAll("[data-sort]").forEach(header => {
+        header.addEventListener("click", () => {
+            if (loading || savingAction || deletingAction) return;
+
+            const field = header.dataset.sort;
+
+            if (!["name", "code", "sort_order"].includes(field)) {
+                return;
+            }
+
+            if (sortField === field) {
+                sortDirection = sortDirection === "asc"
+                    ? "desc"
+                    : "asc";
+            } else {
+                sortField = field;
+                sortDirection = "asc";
+            }
+
+            currentPage = 1;
+            fetchActions();
+        });
+    });
+
+    // =============================================
+    // 24. INITIALIZATION
+    // =============================================
+
+    fetchActions();
+
+})();
+
+</script>
+
+
+
+
+
+
+{% endblock %}
